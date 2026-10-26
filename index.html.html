@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calendario institucional de macroprocesos · SLEP Llanquihue</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗓️</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --font-anthropic-sans: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-anthropic-serif: Georgia, "Times New Roman", serif;
+  --color-bg: #f7f8f7; --color-panel: #ffffff; --color-fg: #1d2421; --color-fg-muted: #5c6863;
+  --color-border-line: #dde3df; --color-bad: #b42318;
+  --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 16px; --cds-gap-lg: 24px;
+  --cds-pad-xs: 4px; --cds-pad-sm: 8px; --cds-pad-md: 12px; --cds-pad-lg: 16px;
+  --cds-radius: 8px; --cds-font-weight-medium: 600;
+  --cds-font-size-caption: 12.5px; --cds-font-size-body: 14px; --cds-font-size-heading: 16px; --cds-font-size-title: 28px;
+  --cds-chart-muted: #b9c2bd; --cds-chart-status-critical: #d64545; --cds-chart-grid: #e6ebe8;
+  --cds-chart-axis: #8a958f; --cds-chart-reference: #4a5550;
+  --cds-surface-popover: #ffffff; --cds-border: #d3dad6; --cds-shadow-popover: 0 6px 20px rgba(20,30,25,.14);
+  --cds-text-secondary: #5c6863; --cds-dur-slow: .3s;
+  --s1: #2f6db3; --s2: #2f9d8f; --s3: #8a5cc2; --s4: #c9772b; --s5: #c2417a; --s6: #5f8f2e; --s7: #b39a1f; --s8: #5a6f86;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-bg: #151917; --color-panel: #1d2320; --color-fg: #e8ede9; --color-fg-muted: #a3aea8;
+    --color-border-line: #2f3733; --color-bad: #ff8a80;
+    --cds-chart-muted: #56615b; --cds-chart-status-critical: #ef6a6a; --cds-chart-grid: #2a312d;
+    --cds-chart-axis: #7d8983; --cds-chart-reference: #c9d2cd;
+    --cds-surface-popover: #232a26; --cds-border: #38423d; --cds-shadow-popover: 0 6px 20px rgba(0,0,0,.5);
+    --cds-text-secondary: #a3aea8;
+    --s1: #6ea3e6; --s2: #4cc2b2; --s3: #b18ae6; --s4: #e89a52; --s5: #e66fa2; --s6: #8fc35a; --s7: #d9bf44; --s8: #8fa5bf;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); line-height: 1.45;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); }
+.slp-wrap { max-width: 1320px; margin: 0 auto; }
+.slp-ver { font-size: var(--cds-font-size-caption) !important; margin-top: var(--cds-gap-xs) !important; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+
+
+.slp { font-family: var(--font-anthropic-sans); color: var(--color-fg); display: flex; flex-direction: column; gap: var(--cds-gap-lg); }
+.slp-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-xs); }
+.slp-head p { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); max-width: 60rem; }
+.slp-head .slp-take { color: var(--color-fg); margin-top: var(--cds-gap-sm); }
+.slp-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: var(--cds-gap-md); }
+.slp-kpi, .slp-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); }
+.slp-kpi .lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.slp-kpi .val { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); font-weight: 400; font-variant-numeric: tabular-nums; min-height: 1.3em; }
+.slp-kpi .sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.slp-card h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+.slp-card .note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0 0 var(--cds-gap-md); }
+.slp-bar { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; }
+.slp-tabs { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); }
+.slp-tabs button { font: inherit; font-size: var(--cds-font-size-body); background: none; border: none; border-bottom: 2px solid transparent; color: var(--color-fg-muted); padding: var(--cds-pad-sm) var(--cds-pad-md); cursor: pointer; }
+.slp-tabs button[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); }
+.slp-chip { font: inherit; font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); border-radius: 999px; padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; display: inline-flex; align-items: center; gap: var(--cds-gap-xs); }
+.slp-chip[aria-pressed="true"] { border-color: var(--color-fg); }
+.slp-chip .sw { width: .65rem; height: .65rem; border-radius: 50%; display: inline-block; }
+.slp select, .slp input[type=search] { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-panel); color: var(--color-fg); }
+.slp-lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.slp-pane { display: flex; flex-direction: column; gap: var(--cds-gap-md); }
+.slp-pane[hidden] { display: none; }
+.slp-rel { position: relative; }
+.slp-tl, .slp-wk, .slp-hm { min-height: 12rem; overflow-x: auto; }
+.slp svg text { font-family: var(--font-anthropic-sans); }
+.slp-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); max-width: 20rem; z-index: 5; }
+.slp-tip .t1 { color: var(--cds-text-secondary); }
+.slp-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: var(--cds-gap-sm); }
+.slp-legend span { display: inline-flex; align-items: center; gap: var(--cds-gap-xs); }
+.slp-months { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: var(--cds-gap-md); }
+.slp-month { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: flex; flex-direction: column; gap: var(--cds-gap-sm); }
+.slp-month h3 { margin: 0; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+.slp-month .q { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: 400; }
+.slp-pi { border: 1px solid var(--color-border-line); border-left-width: 4px; border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); }
+.slp-pi .meta { color: var(--color-fg-muted); }
+.slp-pi.star { border-style: dashed; border-left-style: solid; }
+.slp-macros { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: var(--cds-gap-md); }
+.slp-macro ul { margin: var(--cds-gap-xs) 0 0; padding-left: 1.1rem; font-size: var(--cds-font-size-caption); }
+.slp-macro .amb { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.slp-macro .cnt { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); }
+.slp-tbl { max-height: 32rem; overflow: auto; }
+.slp table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); }
+.slp th { text-align: left; position: sticky; top: 0; background: var(--color-panel); border-bottom: 1px solid var(--color-border-line); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-weight: var(--cds-font-weight-medium); }
+.slp th button { font: inherit; background: none; border: none; color: inherit; cursor: pointer; padding: 0; }
+.slp td { white-space: pre-line; border-bottom: 1px solid var(--color-border-line); padding: var(--cds-pad-xs) var(--cds-pad-sm); vertical-align: top; }
+.slp-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+.slp-notes { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.slp-notes li { margin-bottom: var(--cds-gap-xs); }
+.slp-alert { border-left: 4px solid var(--cds-chart-status-critical); }
+.slp-alert h3 { margin: 0 0 var(--cds-gap-xs); font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+.slp-alert p { margin: 0 0 var(--cds-gap-xs); font-size: var(--cds-font-size-caption); }
+.slp-alert .k { color: var(--color-bad); font-size: var(--cds-font-size-caption); }
+.slp-pi.ind { border-style: dotted; border-left-style: solid; }
+.slp-gap { border-left: 4px solid var(--cds-chart-status-critical); }
+.slp-eje .cnt { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); }
+.slp-ac { margin: 0; padding-left: 1.2rem; font-size: var(--cds-font-size-caption); }
+.slp-ac li { margin-bottom: var(--cds-gap-xs); }
+.slp-vbox { --vista-acc: #8fd694; --vista-ink: #12351a; display: inline-flex; align-items: center; gap: var(--cds-gap-xs); padding: var(--cds-pad-xs); border-radius: 999px; background: color-mix(in srgb, var(--vista-acc) 22%, transparent); border: 2px solid var(--vista-acc); }
+.slp-vbox .slp-lbl { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); padding-left: var(--cds-pad-xs); }
+.slp-vista { font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-body); border: 2px solid var(--vista-acc) !important; background: var(--color-panel) !important; color: var(--color-fg) !important; padding: var(--cds-pad-xs) var(--cds-pad-md) !important; }
+.slp-vista[aria-pressed="true"] { background: var(--vista-acc) !important; color: var(--vista-ink) !important; }
+.slp-banner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm) var(--cds-gap-md); border: 1px solid var(--cds-chart-status-critical); border-left-width: 6px; background: color-mix(in srgb, var(--cds-chart-status-critical) 9%, var(--color-panel)); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); font-size: var(--cds-font-size-caption); }
+.slp-banner .t { color: var(--color-bad); font-weight: var(--cds-font-weight-medium); }
+.slp-banner ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); flex: 1 1 20rem; }
+.slp-banner li::before { content: "● "; color: var(--cds-chart-status-critical); }
+.slp-banner button { font: inherit; font-size: var(--cds-font-size-caption); border: 1px solid var(--cds-chart-status-critical); background: var(--color-panel); color: var(--color-fg); border-radius: 999px; padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; }
+.slp-sub-h { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-md) 0 0; }
+.slp-foot { display: flex; justify-content: flex-end; border-top: 1px solid var(--color-border-line); padding-top: var(--cds-pad-sm); }
+.slp-foot button, .slp-back { font: inherit; font-size: var(--cds-font-size-caption); background: none; border: none; color: var(--color-fg-muted); text-decoration: underline; cursor: pointer; padding: 0; align-self: flex-start; }
+.slp-cgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: var(--cds-gap-md); }
+.slp-comp { background: var(--color-panel); border: 1px solid var(--color-border-line); border-left: 5px solid; border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: flex; flex-direction: column; gap: var(--cds-gap-xs); }
+.slp-comp .top { display: flex; justify-content: space-between; align-items: center; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.slp-comp .acc { font-size: var(--cds-font-size-body); }
+.slp-comp .meta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.slp-st { font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); border-radius: 999px; padding: 1px var(--cds-pad-sm); white-space: nowrap; }
+.slp-st.pend { background: color-mix(in srgb, var(--cds-chart-muted) 45%, transparent); color: var(--color-fg); }
+.slp-st.curso { background: #f2c14e; color: #3d2a00; }
+.slp-st.ok { background: #8fd694; color: #12351a; }
+.slp-flag { font-size: var(--cds-font-size-caption); color: var(--color-bad); font-weight: var(--cds-font-weight-medium); }
+.slp-prog { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--cds-chart-muted) 40%, transparent); overflow: hidden; margin: var(--cds-gap-xs) 0; }
+.slp-prog > span { display: block; height: 100%; border-radius: 999px; }
+.slp-tabs[hidden], .slp-banner[hidden] { display: none; }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+</head>
+<body>
+<div class="slp-wrap">
+
+
+<div class="slp">
+  <header class="slp-head" id="encabezado">
+    <h1>Calendario institucional de macroprocesos · SLEP Llanquihue</h1>
+    <p>Línea de tiempo construida en la Jornada de Subdirectores del 6 de octubre de 2026 · horizonte octubre 2026 – junio 2027.</p>
+    <p class="slp-ver">Versión independiente con datos al 26 de octubre de 2026.</p>
+    <p class="slp-take">La mayor coincidencia de peaks ocurre entre el <b data-source="resumen" data-field="peak_desde" class="dash-skeleton">—</b> y el <b data-source="resumen" data-field="peak_hasta" class="dash-skeleton">—</b>, con <b data-source="resumen" data-field="max_unidades" class="dash-skeleton">—</b> unidades en alta carga a la vez: es el período que más exige acuerdos de coordinación.</p>
+  </header>
+
+  <div class="slp-banner" id="alertas-banner" data-source="alertas" hidden>
+    <span class="t">Alertas activas</span>
+    <ul class="slp-banner-list"></ul>
+    <button type="button" class="slp-banner-go">Ver en Coordinación →</button>
+  </div>
+
+  <div class="slp-kpis" id="indicadores">
+    <div class="slp-kpi"><div class="lbl">Macroprocesos</div><div class="val dash-skeleton" data-source="resumen" data-field="macroprocesos">—</div><div class="sub">identificados en el plotter</div></div>
+    <div class="slp-kpi"><div class="lbl">Dependencias ★</div><div class="val dash-skeleton" data-source="resumen" data-field="dependencias">—</div><div class="sub">requieren a otra unidad</div></div>
+    <div class="slp-kpi"><div class="lbl">Franjas de peak</div><div class="val dash-skeleton" data-source="resumen" data-field="peaks">—</div><div class="sub">períodos de alta carga</div></div>
+    <div class="slp-kpi"><div class="lbl">Semanas críticas</div><div class="val dash-skeleton" data-source="resumen" data-field="semanas_criticas">—</div><div class="sub">con 5 o más unidades en peak</div></div>
+    <div class="slp-kpi"><div class="lbl">Hitos de plotters individuales</div><div class="val dash-skeleton" data-source="resumen" data-field="hitos_individuales">—</div><div class="sub">según la sistematización</div></div>
+  </div>
+
+  <div class="slp-bar" id="filtros">
+    <span class="slp-lbl">Unidad:</span>
+    <span class="slp-bar slp-chips"></span>
+    <span class="slp-lbl">Macroproceso:</span>
+    <select class="slp-macro-sel" aria-label="Macroproceso" data-source="macroprocesos"></select>
+    <button class="slp-chip slp-ind" type="button" aria-pressed="true">Incluir plotters individuales</button>
+    <button class="slp-chip slp-reset" type="button">Limpiar filtros</button>
+  </div>
+
+  <nav class="slp-tabs" role="tablist">
+    <button type="button" role="tab" id="tab-calendario" data-pane="calendario" aria-selected="true">Calendario</button>
+    <button type="button" role="tab" id="tab-meses" data-pane="meses" aria-selected="false">Mes a mes</button>
+    <button type="button" role="tab" id="tab-macroprocesos" data-pane="macroprocesos" aria-selected="false">Macroprocesos y carga</button>
+    <button type="button" role="tab" id="tab-coordinacion" data-pane="coordinacion" aria-selected="false">Coordinación</button>
+    <button type="button" role="tab" id="tab-hoja" data-pane="hoja" aria-selected="false">Hoja de ruta</button>
+  </nav>
+
+  <section class="slp-pane" id="calendario" data-tab="calendario">
+    <div class="slp-card" id="card-timeline">
+      <div class="slp-bar" style="justify-content: space-between; margin-bottom: var(--cds-gap-xs)">
+        <h2 class="slp-tl-title" style="margin:0">Línea de tiempo por unidad</h2>
+        <span class="slp-vbox"><span class="slp-lbl">Filas por:</span>
+          <button type="button" class="slp-chip slp-vista" data-v="unidad" aria-pressed="true">Unidad</button>
+          <button type="button" class="slp-chip slp-vista" data-v="macro" aria-pressed="false">Macroproceso</button></span>
+      </div>
+      <p class="note slp-tl-note">Franjas: peaks de carga marcados bajo la línea. Círculos: hitos (post-it). Barras: hitos con período escrito. Estrellas: dependencias de otra unidad, ubicadas junto al post-it que acompañan. Pase el cursor o toque para ver el texto completo.</p>
+      <div class="slp-rel"><div class="slp-tl" id="timeline" data-source="hitos peaks macroprocesos"></div><div class="slp-tip" hidden></div></div>
+      <div class="slp-legend" id="leyenda-tl"></div>
+    </div>
+    <div class="slp-card" id="card-carga">
+      <h2>Carga concurrente por semana</h2>
+      <p class="note">Número de unidades con peak de carga activo en cada semana. En rojo, las semanas con 5 o más unidades simultáneas (nudo crítico).</p>
+      <div class="slp-rel"><div class="slp-wk" id="carga" data-source="carga_semanal"></div><div class="slp-tip" hidden></div></div>
+    </div>
+    <div class="slp-card" id="card-nudos">
+      <h2>Períodos de nudo crítico</h2>
+      <p class="note">Semanas consecutivas con 5 o más unidades en peak, y las unidades que coinciden.</p>
+      <div class="slp-tbl">
+        <table data-source="nudos" data-row-key="periodo">
+          <thead><tr><th data-field="periodo">Período</th><th data-field="semanas">Semanas</th><th data-field="max_unidades">Máx. unidades</th><th data-field="unidades">Unidades que coinciden</th></tr></thead>
+          <tbody class="slp-nudos-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slp-pane" id="meses" data-tab="meses" hidden>
+    <div class="slp-months" id="grilla-meses" data-source="hitos"></div>
+  </section>
+
+  <section class="slp-pane" id="macroprocesos" data-tab="macroprocesos" hidden>
+    <div class="slp-macros" id="tarjetas-macro" data-source="macroprocesos hitos"></div>
+    <div class="slp-card" id="card-heatmap">
+      <h2>Mapa de calor de carga por unidad y mes</h2>
+      <p class="note">Porcentaje de días del mes cubiertos por una franja de peak de cada unidad.</p>
+      <div class="slp-rel"><div class="slp-hm" id="heatmap" data-source="carga_mensual"></div><div class="slp-tip" hidden></div></div>
+    </div>
+    <div class="slp-card" id="card-subprocesos">
+      <h2>Subprocesos declarados por las subdirecciones</h2>
+      <p class="note">Los 24 subprocesos, con su tipo y unidad según la sistematización de la jornada.</p>
+      <div class="slp-tbl">
+        <table data-source="subprocesos" data-row-key="subproceso">
+          <thead><tr><th data-field="subproceso">Subproceso</th><th data-field="unidad">Subdirección / unidad</th><th data-field="tipo">Tipo</th><th data-field="nota">Observación de la jornada</th></tr></thead>
+          <tbody class="slp-sub-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slp-pane" id="nudos" data-tab="coordinacion" hidden>
+    <h2 class="slp-sub-h" style="margin-top:0">Alertas y nudos críticos</h2>
+    <div class="slp-2" id="alertas-activas" data-source="alertas"></div>
+    <div class="slp-card" id="card-nudos-sis">
+      <h2>Nudos críticos entre unidades</h2>
+      <p class="note">Interfaces identificadas en la sistematización (plotters y plenario). Complementan los nudos calculados desde las franjas de peak en la pestaña Calendario integrado.</p>
+      <div class="slp-rel"><div class="slp-tl" id="gantt-nudos" data-source="nudos_sistematizacion"></div><div class="slp-tip" hidden></div></div>
+      <div class="slp-tbl" style="margin-top: var(--cds-gap-md)">
+        <table data-source="nudos_sistematizacion" data-row-key="nudo">
+          <thead><tr><th data-field="nudo">Nudo</th><th data-field="cuando">Cuándo</th><th data-field="unidades">Unidades que se cruzan</th><th data-field="tension">Qué se tensiona</th></tr></thead>
+          <tbody class="slp-ns-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="slp-card" id="card-tensiones">
+      <h2>Tensiones que emergen</h2>
+      <p class="note">Alertas de fondo planteadas en el plenario.</p>
+      <div class="slp-tbl">
+        <table data-source="alertas" data-row-key="id">
+          <thead><tr><th data-field="id">ID</th><th data-field="tipo">Tipo</th><th data-field="tema">Tensión o alerta</th><th data-field="como">Cómo aparece en la discusión</th><th data-field="consecuencia">Consecuencia para el Servicio</th></tr></thead>
+          <tbody class="slp-al-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="slp-card" id="card-brechas">
+      <h2>Brechas frente al Oficio DEP N° 2621</h2>
+      <p class="note">Instrucciones del Oficio contrastadas con lo que aparece en el análisis de la jornada. La mayoría son de monitoreo y trazabilidad.</p>
+      <div class="slp-tbl">
+        <table data-source="brechas_oficio" data-row-key="id">
+          <thead><tr><th data-field="id">ID</th><th data-field="area">Área</th><th data-field="instruccion">Instrucción del Oficio</th><th data-field="plotter">Qué aparece en el plotter</th><th data-field="brecha">Brecha</th></tr></thead>
+          <tbody class="slp-br-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slp-pane" id="dependencias" data-tab="coordinacion" hidden>
+    <h2 class="slp-sub-h">Dependencias entre unidades</h2>
+    <div class="slp-kpis" id="indicadores-dep">
+      <div class="slp-kpi"><div class="lbl">Solicitudes a otras unidades</div><div class="val dash-skeleton" data-source="resumen_dep" data-field="solicitudes">—</div><div class="sub">desde estrellas ★ y post-it con “Requiere a”</div></div>
+      <div class="slp-kpi"><div class="lbl">Caen dentro de un peak</div><div class="val dash-skeleton" data-source="resumen_dep" data-field="en_peak">—</div><div class="sub">la unidad requerida está en alta carga</div></div>
+      <div class="slp-kpi"><div class="lbl">Caen justo antes de un peak</div><div class="val dash-skeleton" data-source="resumen_dep" data-field="proximo">—</div><div class="sub">el peak empieza en 14 días o menos</div></div>
+      <div class="slp-kpi"><div class="lbl">Unidad más requerida</div><div class="val dash-skeleton" data-source="resumen_dep" data-field="mas_requerida">—</div><div class="sub">en número de estrellas</div></div>
+    </div>
+    <div class="slp-card" id="card-matriz">
+      <h2>Quién requiere a quién</h2>
+      <p class="note">Filas: unidad que solicita (dueña de la estrella o del post-it). Columnas: unidad que se nombra en la estrella. El número es la cantidad de estrellas; en rojo, las que caen en un peak de la unidad requerida.</p>
+      <div class="slp-rel"><div class="slp-hm" id="matriz-dep" data-source="dependencias"></div><div class="slp-tip" hidden></div></div>
+    </div>
+    <div class="slp-card" id="card-dep">
+      <h2>Solicitudes que coinciden con la carga de la unidad requerida</h2>
+      <p class="note">Cada estrella o post-it con “Requiere a” se cruza con las franjas de peak de la unidad que necesita. “Sí” y “Próximo” son los puntos donde conviene acordar plazos con anticipación.</p>
+      <div class="slp-tbl">
+        <table data-source="dependencias" data-row-key="clave">
+          <thead><tr><th data-field="clave">Solicitud → unidad</th><th data-field="fecha">Fecha</th><th data-field="solicitante">Solicitante</th><th data-field="requiere">Requiere a</th><th data-field="en_peak">¿En peak?</th><th data-field="peak">Franja que coincide</th><th data-field="texto">Texto</th></tr></thead>
+          <tbody class="slp-dep-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slp-pane" id="hoja" data-tab="hoja" hidden>
+    <div class="slp-card" id="card-principio">
+      <h2>Planificar hacia atrás desde el 1 de marzo de 2027</h2>
+      <p class="note" style="margin:0">Recomendación central de la sistematización: todo lo que el inicio del año escolar necesita debe quedar decidido en noviembre, para que diciembre–febrero sea ejecución y no improvisación.</p>
+    </div>
+    <div class="slp-macros" id="tarjetas-ejes" data-source="ejes compromisos"></div>
+    <div class="slp-card" id="card-plazos">
+      <h2>Plazos de los compromisos</h2>
+      <p class="note">Cada punto es un compromiso de la hoja de ruta en su plazo sugerido, coloreado por eje. Propuesta para validar.</p>
+      <div class="slp-rel"><div class="slp-tl" id="plazos" data-source="compromisos" style="min-height:8rem"></div><div class="slp-tip" hidden></div></div>
+    </div>
+    <div class="slp-card" id="card-compromisos">
+      <h2>Compromisos</h2>
+      <p class="note">Ordenados por plazo. Estado: gris pendiente, ámbar en curso, verde cumplido. Se marcan los vencidos y los que vencen en los próximos 30 días. El documento anuncia 11 compromisos; la tabla de origen trae 10. Pídeme actualizar el estado en cada seguimiento.</p>
+      <div class="slp-cgrid" id="comp-cards" data-source="compromisos"></div>
+    </div>
+    <div class="slp-card" id="card-acuerdos">
+      <h2>Acuerdos y propuestas expresadas en la jornada</h2>
+      <div class="slp-tbl">
+        <table data-source="acuerdos" data-row-key="id">
+          <thead><tr><th data-field="id">ID</th><th data-field="acuerdo">Acuerdo o propuesta</th></tr></thead>
+          <tbody class="slp-ac-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slp-pane" id="detalle" data-tab="detalle" hidden>
+    <button type="button" class="slp-back">← Volver al calendario</button>
+    <div class="slp-card" id="card-tabla">
+      <h2>Todos los post-it transcritos</h2>
+      <p class="note">Texto tal como aparece en el plotter. “Código” es el anotado en el post-it por cada subdirección; “Macroproceso” es el macroproceso al que se asocia en el panel.</p>
+      <div class="slp-bar" style="margin-bottom: var(--cds-gap-sm)"><input type="search" class="slp-q" placeholder="Buscar texto…" aria-label="Buscar"></div>
+      <div class="slp-tbl">
+        <table data-source="hitos" data-row-key="id" class="slp-htable">
+          <thead><tr>
+            <th data-field="id"><button type="button" data-k="id">ID</button></th>
+            <th data-field="periodo"><button type="button" data-k="inicio">Período</button></th>
+            <th data-field="unidad"><button type="button" data-k="unidad">Unidad</button></th>
+            <th data-field="tipo"><button type="button" data-k="tipo">Tipo</button></th>
+            <th data-field="codigo"><button type="button" data-k="codigo">Código</button></th>
+            <th data-field="texto">Texto del post-it</th>
+            <th data-field="macro"><button type="button" data-k="macro">Macroproceso</button></th>
+            <th data-field="requiere">Requiere a</th>
+            <th data-field="color_postit">Soporte</th>
+            <th data-field="nota">Nota de lectura</th>
+          </tr></thead>
+          <tbody class="slp-h-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="slp-card" id="card-tabla-ind">
+      <h2>Hitos de los plotters individuales</h2>
+      <p class="note">Hitos que cada subdirección escribió en su plotter individual, según la sistematización del 8 de octubre.</p>
+      <div class="slp-tbl">
+        <table data-source="hitos_individuales" data-row-key="id">
+          <thead><tr><th data-field="id">ID</th><th data-field="periodo">Período</th><th data-field="unidad">Unidad</th><th data-field="texto">Hito</th><th data-field="macro">Macroproceso</th><th data-field="condicion">Condición</th><th data-field="nota">Nota</th></tr></thead>
+          <tbody class="slp-ind-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="slp-card" id="card-notas">
+      <h2>Criterios de transcripción</h2>
+      <ul class="slp-notes">
+        <li>Las fechas de las franjas de peak se estimaron midiendo dónde empieza y termina cada flecha respecto de las columnas de mes del plotter (precisión aproximada de una semana).</li>
+        <li>Colores validados: turquesa = DAF; verde claro = UATP; burdeo = Planificación y Control de Gestión e Infraestructura (hoy una subdirección; en el panel se muestran por separado porque pronto serán dos); salmón = compartido por Jurídica y Gabinete, asignado según el tema de cada post-it.</li>
+        <li>Las estrellas naranjas se atribuyen a PyCG, la subdirección con más dependencias marcadas según la sistematización. Las amarillas se asignan a la unidad del post-it que acompañan.</li>
+        <li>SIMCE · IDPS (H27) quedó pegado en mayo en el plotter colectivo; se corrigió a marzo según la sistematización.</li>
+        <li>Los hitos y peaks de los plotters individuales (sistematización del 8-10-2026) se muestran aparte del plotter colectivo y no entran en el cálculo de carga semanal ni de nudos.</li>
+        <li>Los códigos M1–M5 escritos en los post-it corresponden a la numeración propia de cada subdirección y no siempre coinciden con los recuadros M1–M4 del pie del plotter; por eso se muestran por separado.</li>
+        <li>“Vinculación territorial, participación y legitimidad institucional” se registró en un post-it lateral de Gabinete, pero en la revisión se decidió no tratarlo como macroproceso; se mantiene como subproceso de Gabinete y su hito (I28) quedó en M3.</li>
+        <li>Los textos con “[…]” o “(?)” son ilegibles o de lectura probable en las fotografías.</li>
+        <li>“GT” (en “Gabinete – GT”, “Subvenciones DAF GT” y la estrella E04) pertenece a Gabinete; las dependencias hacia GT se cruzan con los peaks de Gabinete.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="slp-foot"><button type="button" class="slp-go-detalle">Ver todos los post-it transcritos y criterios de transcripción</button></div>
+</div>
+
+
+</div>
+<script>
+
+const __DATA = {"hitos": [{"id": "H01", "periodo": "Octubre 2026", "tipo": "Hito", "unidad": "DAF", "color_postit": "Post-it turquesa", "codigo": "M1", "texto": "Cierre presupuestario y financiero 2026 · Informes/reportes CGR · Apertura PPTO 2027 por programa y por EE", "macro": "M1", "requiere": "", "junto_a": "", "inicio": "2026-10-13", "fin": "2026-10-13", "ubicacion": "Sobre la línea de tiempo", "nota": ""}, {"id": "H02", "periodo": "Octubre 2026", "tipo": "Hito", "unidad": "DAF", "color_postit": "Post-it turquesa", "codigo": "M1", "texto": "Formulación y ejecución 2027: análisis ejecución 2025 y años anteriores · distribución presupuestaria por EE y por fuente de financiamiento 2027 · seguimiento, ajustes · evaluación requerimientos", "macro": "M1", "requiere": "", "junto_a": "", "inicio": "2026-10-13", "fin": "2026-10-13", "ubicacion": "Sobre la línea de tiempo", "nota": "El post-it lleva además un “2” encerrado en círculo."}, {"id": "H03", "periodo": "Noviembre 2026", "tipo": "Hito", "unidad": "DAF", "color_postit": "Post-it turquesa", "codigo": "M2", "texto": "Elaboración PAC 2027 por programa y por EE · generación de solicitudes de compra · gestionar procesos de compra (C. Marco, licitaciones, C. Ágil)", "macro": "M1", "requiere": "", "junto_a": "", "inicio": "2026-11-13", "fin": "2026-11-13", "ubicacion": "Sobre la línea de tiempo", "nota": ""}, {"id": "H04", "periodo": "Noviembre 2026", "tipo": "Hito", "unidad": "DAF", "color_postit": "Post-it turquesa", "codigo": "M2", "texto": "Gestionar despacho y recepción de productos con proveedores · gestionar recepción conforme de facturas · gestionar expedientes de pago", "macro": "M1", "requiere": "", "junto_a": "", "inicio": "2026-11-13", "fin": "2026-11-13", "ubicacion": "Sobre la línea de tiempo", "nota": "El post-it lleva además un “2” encerrado en círculo."}, {"id": "H05", "periodo": "Diciembre 2026", "tipo": "Hito", "unidad": "DAF", "color_postit": "Post-it turquesa", "codigo": "M3", "texto": "Recepción de expedientes de pago · gestionar devengo y pago (contabilización y registro en SIGFE)", "macro": "M1", "requiere": "", "junto_a": "", "inicio": "2026-12-28", "fin": "2026-12-28", "ubicacion": "Sobre la línea de tiempo", "nota": "Ubicado en el borde diciembre–enero."}, {"id": "H06", "periodo": "Enero 2027", "tipo": "Hito", "unidad": "DAF", "color_postit": "Post-it turquesa", "codigo": "M4", "texto": "Análisis de ingresos · análisis de gastos (remuneraciones, bienes y servicios) · cargar información en plataformas (SuperEduc, SISREC CGR)", "macro": "M2", "requiere": "", "junto_a": "", "inicio": "2027-01-28", "fin": "2027-01-28", "ubicacion": "Sobre la línea de tiempo", "nota": "Ubicado en el borde enero–febrero."}, {"id": "H07", "periodo": "Enero 2027", "tipo": "Hito", "unidad": "DAF", "color_postit": "Post-it turquesa", "codigo": "", "texto": "Elaboración plan de mantención · seguimiento/evaluación del plan · gestión de contratos (ITC) · elaboración de bases técnicas · recepción conforme del servicio · coordinación con EE", "macro": "M1", "requiere": "", "junto_a": "", "inicio": "2027-01-20", "fin": "2027-01-20", "ubicacion": "Sobre la línea de tiempo", "nota": "Código no visible (el borde izquierdo queda tapado). “ITC”: lectura probable."}, {"id": "H08", "periodo": "Octubre 2026", "tipo": "Hito", "unidad": "Jurídica", "color_postit": "Post-it salmón (compartido Jurídica / Gabinete)", "codigo": "", "texto": "Fiscalización → ① Plan anual ② Estrategia no renovación / supresión GP · V°B° informes", "macro": "M1", "requiere": "", "junto_a": "", "inicio": "2026-10-30", "fin": "2026-10-30", "ubicacion": "Sobre la línea de tiempo", "nota": "Texto validado en la revisión. Ubicado en el borde octubre–noviembre."}, {"id": "H09", "periodo": "Diciembre 2026", "tipo": "Hito", "unidad": "Jurídica", "color_postit": "Post-it salmón (compartido Jurídica / Gabinete)", "codigo": "", "texto": "→ No renovación contratación · ✶ Compras programas al año 2027", "macro": "M1", "requiere": "Unidad de Compras", "junto_a": "", "inicio": "2026-12-13", "fin": "2026-12-13", "ubicacion": "Sobre la línea de tiempo", "nota": "La ✶ dibujada en el post-it indica que requiere a la Unidad de Compras (validado en la revisión)."}, {"id": "H10", "periodo": "Febrero 2027", "tipo": "Hito", "unidad": "Jurídica", "color_postit": "Post-it salmón (compartido Jurídica / Gabinete)", "codigo": "", "texto": "Tribunales CGR · Informes post Plan Anual (eventual)", "macro": "M2", "requiere": "", "junto_a": "", "inicio": "2027-02-01", "fin": "2027-02-01", "ubicacion": "Sobre la línea de tiempo", "nota": "Ubicado en el borde enero–febrero."}, {"id": "H11", "periodo": "Febrero 2027", "tipo": "Hito", "unidad": "Jurídica", "color_postit": "Post-it salmón (compartido Jurídica / Gabinete)", "codigo": "", "texto": "Licitaciones año escolar, estrategia con FAEP y coordinarse en visaciones múltiples procesos", "macro": "M1", "requiere": "Unidad de Compras", "junto_a": "", "inicio": "2027-02-24", "fin": "2027-02-24", "ubicacion": "Sobre la línea de tiempo", "nota": "Texto validado en la revisión."}, {"id": "H12", "periodo": "Enero 2027", "tipo": "Hito", "unidad": "Infraestructura", "color_postit": "Post-it burdeo", "codigo": "M4", "texto": "→ Diseño y ejecución proyectos Infra", "macro": "M1", "requiere": "Finanzas y Unidad de Compras", "junto_a": "", "inicio": "2027-01-08", "fin": "2027-01-08", "ubicacion": "Sobre la línea de tiempo", "nota": "En el post-it, “Finanzas (compras)” indica la dependencia; validado en la revisión."}, {"id": "H13", "periodo": "Enero – Febrero 2027", "tipo": "Hito", "unidad": "Infraestructura", "color_postit": "Post-it burdeo", "codigo": "M5", "texto": "Ejecución preventiva de mantenciones (enero–febrero)", "macro": "M1", "requiere": "", "junto_a": "", "inicio": "2027-01-01", "fin": "2027-02-28", "ubicacion": "Sobre la línea de tiempo", "nota": "Período escrito en el post-it."}, {"id": "H14", "periodo": "Enero – Junio 2027", "tipo": "Hito", "unidad": "Infraestructura", "color_postit": "Post-it burdeo", "codigo": "", "texto": "Diseño / Plan de infraestructura (enero–junio)", "macro": "M1", "requiere": "", "junto_a": "", "inicio": "2027-01-01", "fin": "2027-06-30", "ubicacion": "Sobre la línea de tiempo", "nota": "Período escrito en el post-it; pegado en la parte superior, sobre enero–febrero."}, {"id": "H15", "periodo": "Marzo – Diciembre 2027", "tipo": "Hito", "unidad": "Infraestructura", "color_postit": "Post-it burdeo", "codigo": "M5", "texto": "Ejecución y cierre de mantenciones (marzo–diciembre)", "macro": "M1", "requiere": "", "junto_a": "", "inicio": "2027-03-01", "fin": "2027-12-31", "ubicacion": "Sobre la línea de tiempo", "nota": "Período escrito en el post-it; se extiende más allá del horizonte (junio 2027)."}, {"id": "H16", "periodo": "Diciembre 2026 – Agosto 2027", "tipo": "Hito", "unidad": "Planificación y Control de Gestión", "color_postit": "Post-it burdeo", "codigo": "M1", "texto": "Elaboración PEL (diciembre – agosto)", "macro": "M3", "requiere": "", "junto_a": "", "inicio": "2026-12-01", "fin": "2027-08-31", "ubicacion": "Sobre la línea de tiempo", "nota": "En el plotter colectivo el post-it quedó pegado en octubre; período corregido en la revisión: se desarrollará entre diciembre de 2026 y agosto de 2027 (se extiende más allá del horizonte)."}, {"id": "H17", "periodo": "Noviembre 2026", "tipo": "Hito", "unidad": "Planificación y Control de Gestión", "color_postit": "Post-it burdeo", "codigo": "M3", "texto": "Monitoreo trimestral · Elaboración CDC 2027", "macro": "M2", "requiere": "", "junto_a": "", "inicio": "2026-11-23", "fin": "2026-11-23", "ubicacion": "Sobre la línea de tiempo", "nota": ""}, {"id": "H18", "periodo": "Diciembre 2026 – Enero 2027", "tipo": "Hito", "unidad": "Planificación y Control de Gestión", "color_postit": "Post-it burdeo", "codigo": "M5", "texto": "Informes finales instrumentos de gestión", "macro": "M2", "requiere": "", "junto_a": "", "inicio": "2026-12-01", "fin": "2027-01-31", "ubicacion": "Sobre la línea de tiempo", "nota": "En el plotter estaba pegado en el margen derecho con “Diciembre”; ubicado en diciembre 2026 – enero 2027 en la revisión."}, {"id": "H20", "periodo": "Octubre 2026", "tipo": "Hito", "unidad": "UATP", "color_postit": "Post-it verde claro", "codigo": "", "texto": "Dotación - Acciones PAL 2027 - Definiciones CDC", "macro": "M3", "requiere": "", "junto_a": "", "inicio": "2026-10-30", "fin": "2026-10-30", "ubicacion": "Sobre la línea de tiempo", "nota": "Texto validado en la revisión. Ubicado en el borde octubre–noviembre."}, {"id": "H21", "periodo": "Diciembre 2026", "tipo": "Hito", "unidad": "UATP", "color_postit": "Post-it verde claro", "codigo": "", "texto": "Evaluación asesorías · Reportabilidad · Cierre PME · Cierre año lectivo SIGE", "macro": "M4", "requiere": "", "junto_a": "", "inicio": "2026-12-13", "fin": "2026-12-13", "ubicacion": "Sobre la línea de tiempo", "nota": ""}, {"id": "H22", "periodo": "Febrero 2027", "tipo": "Hito", "unidad": "UATP", "color_postit": "Post-it verde claro", "codigo": "", "texto": "Diseño, creación de orientaciones año 2027", "macro": "M4", "requiere": "", "junto_a": "", "inicio": "2027-02-03", "fin": "2027-02-03", "ubicacion": "Sobre la línea de tiempo", "nota": "Ubicado en el borde enero–febrero."}, {"id": "H23", "periodo": "Febrero 2027", "tipo": "Hito", "unidad": "UATP", "color_postit": "Post-it verde claro", "codigo": "", "texto": "Creación Plan Global", "macro": "M4", "requiere": "", "junto_a": "", "inicio": "2027-02-03", "fin": "2027-02-03", "ubicacion": "Sobre la línea de tiempo", "nota": "Post-it superpuesto bajo H22."}, {"id": "H24", "periodo": "Febrero 2027", "tipo": "Hito", "unidad": "UATP", "color_postit": "Post-it verde claro", "codigo": "", "texto": "Necesidad de Monitorear resultados de Aprendizaje", "macro": "M4", "requiere": "", "junto_a": "", "inicio": "2027-02-24", "fin": "2027-02-24", "ubicacion": "Sobre la línea de tiempo", "nota": "Texto corregido en la revisión (antes “Monitorear resultados · indicadores de eficiencia interna”)."}, {"id": "H25", "periodo": "Marzo 2027", "tipo": "Hito", "unidad": "UATP", "color_postit": "Post-it verde claro", "codigo": "", "texto": "Planes normativos · PME 2027", "macro": "M4", "requiere": "", "junto_a": "", "inicio": "2027-03-15", "fin": "2027-03-15", "ubicacion": "Sobre la línea de tiempo", "nota": ""}, {"id": "H27", "periodo": "Marzo 2027", "tipo": "Hito", "unidad": "UATP", "color_postit": "Post-it verde claro", "codigo": "", "texto": "Análisis SIMCE - IDPS", "macro": "M4", "requiere": "Planificación y Control de Gestión", "junto_a": "", "inicio": "2027-03-20", "fin": "2027-03-20", "ubicacion": "Sobre la línea de tiempo", "nota": "En el plotter colectivo quedó pegado en mayo; fecha corregida a marzo. Se unió con la estrella E07 (“Plani”) en la revisión."}, {"id": "H28", "periodo": "Marzo 2027", "tipo": "Hito", "unidad": "Planificación y Control de Gestión", "color_postit": "Agregado en la revisión", "codigo": "", "texto": "Realizar análisis SIMCE para estrategia de UATP · Analizar indicadores de eficiencia interna", "macro": "M2", "requiere": "", "junto_a": "H27", "inicio": "2027-03-20", "fin": "2027-03-20", "ubicacion": "Sobre la línea de tiempo", "nota": "Hito agregado en la revisión del panel; responde a lo que UATP requiere en H27."}, {"id": "E01", "periodo": "Octubre 2026", "tipo": "Dependencia ★", "unidad": "Planificación y Control de Gestión", "color_postit": "Estrella naranja", "codigo": "", "texto": "GP · UATP? · territorial — Convenios de desempeño(?)", "macro": "M3", "requiere": "Gestión de Personas, UATP, Territorial", "junto_a": "H20", "inicio": "2026-10-14", "fin": "2026-10-14", "ubicacion": "Sobre la línea de tiempo", "nota": "Segunda línea de lectura probable. Estrella naranja atribuida a PyCG (la sistematización indica que es la subdirección con más dependencias marcadas)."}, {"id": "E02", "periodo": "Enero 2027", "tipo": "Dependencia ★", "unidad": "Planificación y Control de Gestión", "color_postit": "Estrella naranja", "codigo": "", "texto": "Gestiones Reconocimiento Oficial", "macro": "M1", "requiere": "Infraestructura, UATP, Gabinete (Gestión Territorial)", "junto_a": "H13", "inicio": "2027-01-06", "fin": "2027-01-06", "ubicacion": "Sobre la línea de tiempo", "nota": "Texto corregido en la revisión (antes transcrito como “Defensa · GP – territorio · UATP”). Estrella naranja atribuida a PyCG; pegada bajo H13."}, {"id": "E04", "periodo": "Abril 2027", "tipo": "Dependencia ★", "unidad": "Planificación y Control de Gestión", "color_postit": "Estrella naranja", "codigo": "", "texto": "PAL → GP · UATP · GT → Estrategia", "macro": "M3", "requiere": "Gestión de Personas, UATP, Gabinete (GT)", "junto_a": "", "inicio": "2027-04-08", "fin": "2027-04-08", "ubicacion": "Sobre la línea de tiempo", "nota": "Estrella naranja atribuida a PyCG. Texto corregido en la revisión: se quita “compras” y se agregan UATP y GT. Estaba junto a H26 (Instrumentos DIA – DID), eliminado por duplicarse con I13."}, {"id": "E05", "periodo": "Marzo 2027", "tipo": "Dependencia ★", "unidad": "UATP", "color_postit": "Estrella amarilla", "codigo": "", "texto": "Jurídica", "macro": "M4", "requiere": "Jurídica", "junto_a": "H25", "inicio": "2027-03-24", "fin": "2027-03-24", "ubicacion": "Sobre la línea de tiempo", "nota": ""}, {"id": "E06", "periodo": "Febrero 2027", "tipo": "Dependencia ★", "unidad": "UATP", "color_postit": "Estrella amarilla", "codigo": "", "texto": "Bases y gestiones licitaciones Plan de Capacitaciones", "macro": "M4", "requiere": "Unidad de Compras (DAF), Jurídica", "junto_a": "H23", "inicio": "2027-02-12", "fin": "2027-02-12", "ubicacion": "Sobre la línea de tiempo", "nota": "Texto corregido en la revisión (antes “Compras · DAF”)."}, {"id": "E08", "periodo": "Marzo 2027", "tipo": "Dependencia ★", "unidad": "Infraestructura", "color_postit": "Estrella amarilla", "codigo": "", "texto": "Subvenciones · DAF · GT", "macro": "M1", "requiere": "DAF, Gabinete (GT)", "junto_a": "H15", "inicio": "2027-03-31", "fin": "2027-03-31", "ubicacion": "Sobre la línea de tiempo", "nota": "Pegada sobre la línea, bajo H15; vínculo por cercanía. GT pertenece a Gabinete."}, {"id": "E09", "periodo": "Diciembre 2026", "tipo": "Dependencia ★", "unidad": "Gestión de Personas", "color_postit": "Estrella (agregada en la revisión)", "codigo": "", "texto": "Sanción del PAL — requiere a PyCG, Gabinete y UATP", "macro": "M3", "requiere": "Planificación y Control de Gestión, Gabinete, UATP", "junto_a": "", "inicio": "2026-12-15", "fin": "2026-12-15", "ubicacion": "Sobre la línea de tiempo", "nota": "Estrella agregada en la revisión del panel (sanción del PAL, 15 dic 2026). El hito I03 del plotter individual se eliminó a pedido."}], "peaks": [{"id": "P01", "unidad": "DAF", "etiqueta": "DAF", "inicio": "2026-11-18", "fin": "2027-02-20", "nota": ""}, {"id": "P02", "unidad": "UATP", "etiqueta": "UATP", "inicio": "2026-10-26", "fin": "2026-12-10", "nota": ""}, {"id": "P03", "unidad": "UATP", "etiqueta": "UATP", "inicio": "2027-02-09", "fin": "2027-03-21", "nota": ""}, {"id": "P04", "unidad": "UATP", "etiqueta": "UATP", "inicio": "2027-04-01", "fin": "2027-06-30", "nota": "La flecha llega al final de junio."}, {"id": "P05", "unidad": "Gabinete", "etiqueta": "Gabinete", "inicio": "2026-12-17", "fin": "2027-01-31", "nota": ""}, {"id": "P06", "unidad": "Gabinete", "etiqueta": "Gabinete – GT", "inicio": "2027-03-01", "fin": "2027-05-31", "nota": ""}, {"id": "P07", "unidad": "Jurídica", "etiqueta": "Jurídica", "inicio": "2026-10-01", "fin": "2027-01-05", "nota": ""}, {"id": "P08", "unidad": "Jurídica", "etiqueta": "Jurídica", "inicio": "2027-01-12", "fin": "2027-02-18", "nota": ""}, {"id": "P09", "unidad": "Planificación y Control de Gestión", "etiqueta": "Planificación y Control de Gestión", "inicio": "2026-10-01", "fin": "2027-01-05", "nota": ""}, {"id": "P10", "unidad": "Planificación y Control de Gestión", "etiqueta": "PyCG", "inicio": "2027-01-12", "fin": "2027-02-25", "nota": ""}, {"id": "P11", "unidad": "Planificación y Control de Gestión", "etiqueta": "PyCG", "inicio": "2027-04-01", "fin": "2027-05-15", "nota": ""}, {"id": "P12", "unidad": "Infraestructura", "etiqueta": "Infra", "inicio": "2026-11-01", "fin": "2026-12-13", "nota": ""}, {"id": "P13", "unidad": "Infraestructura", "etiqueta": "Infraestructura", "inicio": "2027-01-12", "fin": "2027-02-25", "nota": ""}, {"id": "P14", "unidad": "Infraestructura", "etiqueta": "Infra", "inicio": "2027-05-15", "fin": "2027-06-30", "nota": ""}, {"id": "P15", "unidad": "Gestión de Personas", "etiqueta": "GP", "inicio": "2026-10-01", "fin": "2026-11-02", "nota": "La flecha comienza antes de octubre (fuera del calendario)."}, {"id": "P16", "unidad": "Gestión de Personas", "etiqueta": "Gestión de Personas", "inicio": "2027-01-12", "fin": "2027-04-10", "nota": ""}], "macroprocesos": [{"codigo": "M1", "nombre": "Aseguramiento de condiciones para el servicio educativo", "ambito": "Soporte", "componentes": "Dotación · Procesos de compras · Mantenimiento y SS.GG. · Inicio de clases · Gestión de contingencias · Acompañamiento a directores · Seguimiento periodo de invierno(?) · Transporte escolar", "fuente": "", "estado": "Identificado en el plotter"}, {"codigo": "M2", "nombre": "Reportabilidad y monitoreo", "ambito": "Estratégico", "componentes": "", "fuente": "Recuadro M2 del plotter; casilla “Estratégico” marcada. Sin subprocesos anotados.", "estado": "Identificado en el plotter"}, {"codigo": "M3", "nombre": "Conducción estratégica", "ambito": "Estratégico", "componentes": "Apertura, fusión y cierre de escuelas · Preparación PEL / PAL · Cuenta pública · Agenda estratégica", "fuente": "Recuadro M3 del plotter (casilla “Estratégico” marcada) y post-it lateral de Gabinete “Macroproceso: Conducción estratégica”.", "estado": "Identificado en el plotter"}, {"codigo": "M4", "nombre": "Resultados educativos", "ambito": "Misional", "componentes": "", "fuente": "Recuadro M4 del plotter; casilla “Misional” marcada. Sin subprocesos anotados.", "estado": "Identificado en el plotter"}], "subprocesos": [{"subproceso": "Dotación", "unidad": "Gestión de Personas", "tipo": "Soporte", "nota": ""}, {"subproceso": "Pago de remuneraciones", "unidad": "Gestión de Personas", "tipo": "Soporte", "nota": ""}, {"subproceso": "Reportabilidad (GP)", "unidad": "Gestión de Personas", "tipo": "Soporte", "nota": "88 reportes periódicos a DIPRES, CAIGG, MINEDUC, DEP, Congreso, CGR y Superintendencia."}, {"subproceso": "Acompañamiento directo – redes", "unidad": "UATP", "tipo": "Misional", "nota": ""}, {"subproceso": "Resultados educativos", "unidad": "UATP", "tipo": "Misional", "nota": ""}, {"subproceso": "Reportabilidad (UATP)", "unidad": "UATP", "tipo": "Misional", "nota": "SIMCE, DIA, PAES."}, {"subproceso": "Monitoreo y análisis de datos", "unidad": "UATP", "tipo": "Misional", "nota": "Marcado “clave – no existe”: no hay en el equipo capacidad experta en análisis de datos."}, {"subproceso": "Planificación y control presupuestario", "unidad": "DAF", "tipo": "Soporte", "nota": ""}, {"subproceso": "Procesos de gestión de compras", "unidad": "DAF", "tipo": "Soporte", "nota": "PAC por EE."}, {"subproceso": "Pago oportuno de proveedores", "unidad": "DAF", "tipo": "Soporte", "nota": "Pago y devengo."}, {"subproceso": "Rendiciones", "unidad": "DAF", "tipo": "Soporte", "nota": "Rendiciones e ingresos; carga hasta marzo en SUPEREDUC y SISREC."}, {"subproceso": "Reportabilidad (DAF)", "unidad": "DAF", "tipo": "Soporte", "nota": ""}, {"subproceso": "Plan de mantenimiento T.I. y SS.GG.", "unidad": "DAF", "tipo": "Soporte", "nota": "Propuesto como plan anual, listo antes del 1 de marzo."}, {"subproceso": "Planificación estratégica institucional", "unidad": "Planificación y Control de Gestión", "tipo": "Estratégico", "nota": ""}, {"subproceso": "PAL – PEL", "unidad": "Planificación y Control de Gestión", "tipo": "Estratégico", "nota": ""}, {"subproceso": "Monitoreo de instrumentos de gestión", "unidad": "Planificación y Control de Gestión", "tipo": "Estratégico", "nota": ""}, {"subproceso": "Diseño y ejecución de proyectos de infraestructura", "unidad": "Infraestructura", "tipo": "Soporte", "nota": ""}, {"subproceso": "Mantener operativos los establecimientos", "unidad": "Infraestructura", "tipo": "Soporte", "nota": "Mantención operativa de EE."}, {"subproceso": "Conducción estratégica", "unidad": "Gabinete", "tipo": "Estratégico", "nota": ""}, {"subproceso": "Vinculación territorial, participación y legitimidad institucional", "unidad": "Gabinete", "tipo": "Misional", "nota": ""}, {"subproceso": "Aseguramiento de condiciones del servicio educativo", "unidad": "Gabinete", "tipo": "Soporte", "nota": ""}, {"subproceso": "Legalidad estratégica y asesoría", "unidad": "Jurídica", "tipo": "Soporte", "nota": "Carga más alta y no escrita en ningún instrumento."}, {"subproceso": "Visto bueno de legalidad en procesos de otras unidades", "unidad": "Jurídica", "tipo": "Soporte", "nota": "Visación constante de nombramientos, contratos y convenios, sin plazos."}, {"subproceso": "Defensa jurídica", "unidad": "Jurídica", "tipo": "Estratégico", "nota": "Alrededor de 220 sumarios abiertos y 40 causas judiciales (cifras a verificar)."}], "hitos_individuales": [{"id": "I01", "unidad": "Gestión de Personas", "texto": "Comisión y oficio de dotación", "inicio": "2026-08-01", "fin": "2026-09-30", "periodo": "Ago – Sep 2026", "macro": "M1", "condicion": "", "nota": "Antes del horizonte: el ciclo de dotación parte en agosto."}, {"id": "I02", "unidad": "Gestión de Personas", "texto": "Revisión de movimientos y no renovaciones", "inicio": "2026-11-01", "fin": "2026-11-30", "periodo": "Noviembre 2026", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I04", "unidad": "Gestión de Personas", "texto": "Notificaciones de supresión de dotación al 31/12", "inicio": "2026-12-31", "fin": "2026-12-31", "periodo": "31 dic 2026", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I05", "unidad": "Gestión de Personas", "texto": "Reclutamiento de vacantes PAL", "inicio": "2027-02-01", "fin": "2027-03-31", "periodo": "Feb – Mar 2027", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I06", "unidad": "Gestión de Personas", "texto": "Declaración del sostenedor", "inicio": "2027-04-01", "fin": "2027-04-30", "periodo": "Abril 2027", "macro": "M2", "condicion": "", "nota": ""}, {"id": "I07", "unidad": "Gestión de Personas", "texto": "Reclutamiento de profesionales PIE", "inicio": "2027-05-01", "fin": "2027-05-31", "periodo": "Mayo 2027", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I08", "unidad": "UATP", "texto": "Reformulación JEC", "inicio": "2026-10-01", "fin": "2026-10-31", "periodo": "Octubre 2026", "macro": "M4", "condicion": "", "nota": ""}, {"id": "I09", "unidad": "UATP", "texto": "Evaluación de asesoría y redes con EE", "inicio": "2026-11-01", "fin": "2026-12-31", "periodo": "Nov – Dic 2026", "macro": "M4", "condicion": "", "nota": "Coincide con H21 del plotter colectivo."}, {"id": "I10", "unidad": "UATP", "texto": "Análisis de datos y orientaciones pedagógicas 2027", "inicio": "2027-01-01", "fin": "2027-02-28", "periodo": "Ene – Feb 2027", "macro": "M4", "condicion": "", "nota": "Coincide con H22 del plotter colectivo."}, {"id": "I11", "unidad": "UATP", "texto": "Inducción de directores nuevos y planes obligatorios", "inicio": "2027-03-01", "fin": "2027-03-31", "periodo": "Marzo 2027", "macro": "M4", "condicion": "", "nota": ""}, {"id": "I12", "unidad": "UATP", "texto": "PME 2027 y levantamiento NEE", "inicio": "2027-04-01", "fin": "2027-04-30", "periodo": "Abril 2027", "macro": "M4", "condicion": "", "nota": ""}, {"id": "I13", "unidad": "UATP", "texto": "Aplicación del DIA en todas las comunidades", "inicio": "2027-04-01", "fin": "2027-04-30", "periodo": "Abril 2027", "macro": "M4", "condicion": "", "nota": "Reemplaza a H26 (“Instrumentos DIA – DID”) del plotter colectivo, eliminado por duplicado."}, {"id": "I14", "unidad": "UATP", "texto": "Evaluación médica PIE", "inicio": "2027-06-01", "fin": "2027-06-30", "periodo": "Junio 2027", "macro": "M4", "condicion": "", "nota": ""}, {"id": "I15", "unidad": "DAF", "texto": "Elaboración del plan anual de mantenimiento T.I. y SS.GG. (listo antes del 1 de marzo)", "inicio": "2026-10-01", "fin": "2027-02-28", "periodo": "Oct 2026 – Feb 2027", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I16", "unidad": "DAF", "texto": "Rendiciones de subvenciones ante la Superintendencia (SUPEREDUC, SISREC)", "inicio": "2026-10-01", "fin": "2027-03-31", "periodo": "Oct 2026 – Mar 2027", "macro": "M2", "condicion": "", "nota": "“Generan carga hasta marzo”."}, {"id": "I17", "unidad": "Planificación y Control de Gestión", "texto": "Planificación estratégica institucional", "inicio": "2026-10-01", "fin": "2026-10-31", "periodo": "Desde octubre 2026", "macro": "M3", "condicion": "", "nota": ""}, {"id": "I18", "unidad": "Planificación y Control de Gestión", "texto": "PAL: consolidación y validación", "inicio": "2026-07-01", "fin": "2026-12-31", "periodo": "Jul – Dic 2026", "macro": "M3", "condicion": "", "nota": ""}, {"id": "I19", "unidad": "Planificación y Control de Gestión", "texto": "PEL: diseño y sanción", "inicio": "2027-01-01", "fin": "2027-08-31", "periodo": "Ene – Ago 2027", "macro": "M3", "condicion": "", "nota": "Sanción PEL 2028 en agosto 2027, fuera del horizonte."}, {"id": "I20", "unidad": "Planificación y Control de Gestión", "texto": "Informes finales CDC / PMG", "inicio": "2027-01-01", "fin": "2027-01-31", "periodo": "Enero 2027", "macro": "M2", "condicion": "", "nota": ""}, {"id": "I21", "unidad": "Planificación y Control de Gestión", "texto": "CGE (todo el año)", "inicio": "2026-10-01", "fin": "2027-06-30", "periodo": "Todo el período", "macro": "M2", "condicion": "", "nota": ""}, {"id": "I22", "unidad": "Infraestructura", "texto": "Plan de Infraestructura 2027–2031", "inicio": "", "fin": "", "periodo": "Sin fecha", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I24", "unidad": "Gabinete", "texto": "Cierre del año escolar", "inicio": "2026-12-01", "fin": "2026-12-31", "periodo": "Diciembre 2026", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I25", "unidad": "Gabinete", "texto": "Preparación PEL", "inicio": "2026-10-01", "fin": "2027-06-30", "periodo": "Oct 2026 – Jun 2027", "macro": "M3", "condicion": "", "nota": ""}, {"id": "I26", "unidad": "Gabinete", "texto": "Agenda de la Dirección Ejecutiva", "inicio": "2026-10-01", "fin": "2027-06-30", "periodo": "Todo el período", "macro": "M3", "condicion": "", "nota": ""}, {"id": "I27", "unidad": "Gabinete", "texto": "Licitación de transporte escolar", "inicio": "2026-10-01", "fin": "2026-10-31", "periodo": "Octubre 2026", "macro": "M1", "condicion": "", "nota": "Gabinete la marca en octubre y en marzo. Alerta: licitación atrasada."}, {"id": "I28", "unidad": "Gabinete", "texto": "Planificación de Consejo Local, consejos escolares y CCEE", "inicio": "2027-01-01", "fin": "2027-02-28", "periodo": "Ene – Feb 2027", "macro": "M3", "condicion": "", "nota": "Reasignado a M3 al eliminarse “Vinculación territorial” como macroproceso."}, {"id": "I29", "unidad": "Gabinete", "texto": "ADP de directores", "inicio": "2027-02-01", "fin": "2027-02-28", "periodo": "Febrero 2027", "macro": "M3", "condicion": "", "nota": ""}, {"id": "I30", "unidad": "Gabinete", "texto": "Inicio del año escolar", "inicio": "2027-03-01", "fin": "2027-03-31", "periodo": "Marzo 2027", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I31", "unidad": "Gabinete", "texto": "Licitación de transporte escolar (segundo hito)", "inicio": "2027-03-01", "fin": "2027-03-31", "periodo": "Marzo 2027", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I32", "unidad": "Gabinete", "texto": "Cuenta pública", "inicio": "2027-03-01", "fin": "2027-04-30", "periodo": "Mar – Abr 2027", "macro": "M3", "condicion": "", "nota": ""}, {"id": "I33", "unidad": "Jurídica", "texto": "Plan de compras", "inicio": "2026-10-01", "fin": "2026-10-31", "periodo": "Octubre 2026", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I34", "unidad": "Jurídica", "texto": "Actualización de manuales y procedimientos de sumarios", "inicio": "2026-11-01", "fin": "2026-12-31", "periodo": "Nov – Dic 2026", "macro": "M3", "condicion": "", "nota": "Solo cerca del 40% de los manuales está actualizado."}, {"id": "I35", "unidad": "Jurídica", "texto": "Plan de capacitación en compras", "inicio": "", "fin": "", "periodo": "Sin fecha", "macro": "M1", "condicion": "", "nota": ""}, {"id": "I36", "unidad": "Jurídica", "texto": "Ley Karin", "inicio": "2026-10-01", "fin": "2027-06-30", "periodo": "Todo el año (esporádico)", "macro": "M3", "condicion": "", "nota": "Proceso que ocurre durante todo el año de manera esporádica (validado en la revisión)."}, {"id": "I37", "unidad": "Planificación y Control de Gestión", "texto": "Pre-revisión convenios ADP directores/as", "inicio": "2027-01-01", "fin": "2027-01-31", "periodo": "Enero 2027", "macro": "M3", "condicion": "", "nota": "Agregado en la revisión del panel."}], "carga_individual": [{"id": "C01", "unidad": "Gestión de Personas", "tipo": "Peak", "inicio": "2026-11-01", "fin": "2026-12-31", "descripcion": "Dotación"}, {"id": "C02", "unidad": "Gestión de Personas", "tipo": "Peak", "inicio": "2027-01-01", "fin": "2027-03-31", "descripcion": "Reclamos de reincorporación PAL ante CGR"}, {"id": "C03", "unidad": "Gestión de Personas", "tipo": "Carga continua", "inicio": "2026-10-01", "fin": "2027-06-30", "descripcion": "Ciclo mensual de remuneraciones, reprocesos y 88 reportes periódicos"}, {"id": "C04", "unidad": "UATP", "tipo": "Peak", "inicio": "2026-10-01", "fin": "2026-12-31", "descripcion": "Evaluación y cierre de año"}, {"id": "C05", "unidad": "UATP", "tipo": "Peak", "inicio": "2027-02-01", "fin": "2027-03-31", "descripcion": "Diseño del año pedagógico y arranque escolar"}, {"id": "C06", "unidad": "UATP", "tipo": "Peak", "inicio": "2027-04-01", "fin": "2027-06-30", "descripcion": "PME, DIA, NEE y evaluación PIE"}, {"id": "C07", "unidad": "DAF", "tipo": "Peak", "inicio": "2026-11-01", "fin": "2027-02-28", "descripcion": "Cruce cierre 2026 y apertura 2027"}, {"id": "C08", "unidad": "Planificación y Control de Gestión", "tipo": "Peak", "inicio": "2026-11-01", "fin": "2027-02-28", "descripcion": "Instrumentos de gestión concentrados"}, {"id": "C09", "unidad": "Planificación y Control de Gestión", "tipo": "Carga continua", "inicio": "2026-10-01", "fin": "2027-06-30", "descripcion": "CGE durante todo el año"}, {"id": "C10", "unidad": "Infraestructura", "tipo": "Peak", "inicio": "2027-03-01", "fin": "2027-06-30", "descripcion": "Ejecución físico-financiera de proyectos y contratos de mantención (mar – dic)"}, {"id": "C11", "unidad": "Gabinete", "tipo": "Peak", "inicio": "2026-10-01", "fin": "2026-10-31", "descripcion": "Licitación de transporte escolar"}, {"id": "C12", "unidad": "Gabinete", "tipo": "Peak", "inicio": "2026-12-01", "fin": "2027-01-31", "descripcion": "Planificación anual"}, {"id": "C13", "unidad": "Gabinete", "tipo": "Peak", "inicio": "2027-02-01", "fin": "2027-04-30", "descripcion": "Inicio de clases y cuenta pública"}, {"id": "C14", "unidad": "Jurídica", "tipo": "Peak", "inicio": "2026-10-01", "fin": "2026-12-31", "descripcion": "Visación y defensa, carga más fuerte"}, {"id": "C15", "unidad": "Jurídica", "tipo": "Peak", "inicio": "2027-01-01", "fin": "2027-02-28", "descripcion": "Peak de visaciones de compras y personas"}, {"id": "C16", "unidad": "Jurídica", "tipo": "Carga continua", "inicio": "2026-10-01", "fin": "2027-06-30", "descripcion": "Visación constante de nombramientos, contratos y convenios"}], "nudos_sistematizacion": [{"nudo": "Dotación 2027 y PAL", "unidades": "Gestión de Personas, UATP, DAF, Planificación y Control de Gestión, Jurídica", "inicio": "2026-08-01", "fin": "2027-03-31", "cuando": "ago 2026 – mar 2027", "tension": "Supresiones al 31/12, sanción PAL 15/12, reclamos ante CGR y reclutamiento de vacantes en feb–mar"}, {"nudo": "Compras para el inicio del año escolar", "unidades": "DAF, UATP, Infraestructura, Jurídica", "inicio": "2026-11-01", "fin": "2027-02-28", "cuando": "nov 2026 – feb 2027", "tension": "Licitaciones relevantes para inicio de año deben estar adjudicadas antes de marzo; la visación jurídica se vuelve el embudo"}, {"nudo": "Instrumentos de planificación (PEL, PAL, CDC, CGE)", "unidades": "Planificación y Control de Gestión, Gabinete, UATP", "inicio": "2026-11-01", "fin": "2027-03-31", "cuando": "nov 2026 – mar 2027", "tension": "Varias unidades preparan y esperan los mismos instrumentos sin un calendario único"}, {"nudo": "Monitoreo y reportabilidad", "unidades": "UATP, Planificación y Control de Gestión, Gestión de Personas, DAF", "inicio": "2026-10-01", "fin": "2027-06-30", "cuando": "Todo el período", "tension": "88 reportes solo en Personas; UATP declara que el monitoreo “no existe”"}, {"nudo": "Inicio del año escolar", "unidades": "Gabinete, UATP, Infraestructura, DAF, Gestión de Personas", "inicio": "2027-02-01", "fin": "2027-03-31", "cuando": "feb – mar 2027", "tension": "Transporte escolar, inducción de directores, planes obligatorios y contratos de mantención al mismo tiempo"}, {"nudo": "Ciclo SIMCE → plan de acompañamiento", "unidades": "UATP, Planificación y Control de Gestión", "inicio": "2027-03-01", "fin": "2027-06-30", "cuando": "mar – jun 2027", "tension": "El Oficio exige el plan al mes siguiente de los resultados, pero el Plan Global UATP se diseña en febrero"}], "alertas": [{"id": "A1", "tipo": "Alerta activa", "tema": "Licitación de suministro de mantención no llega para ejecución enero – febrero 2027", "como": "Se explicita que no llegarán al tiempo proyectado. Se sugiere reunión con Subdirectores y Directora Ejecutiva para acordar cómo operar.", "consecuencia": "Las mantenciones deben realizarse en el período estival para evitar suspensión de clases, planes de contingencia e iniciar de manera óptima el año escolar."}, {"id": "A2", "tipo": "Alerta activa", "tema": "Licitación de transporte escolar atrasada", "como": "Se sugiere reunión con Subdirectores y Directora Ejecutiva para acordar cómo operar.", "consecuencia": "Afecta directamente el aseguramiento de la asistencia y tiene una dimensión comunicacional potente."}, {"id": "T1", "tipo": "Tensión", "tema": "Planificación formal vs. planificación real", "como": "Jurídica tensiona respecto de la planificación necesaria, sobre todo en licitaciones que deberían cerrar en noviembre se resuelven tarde y apurados, con figuras de riesgo.", "consecuencia": "Compras de emergencia, anexos de contrato y riesgo financiero."}, {"id": "T2", "tipo": "Tensión", "tema": "Autonomía de los EE vs. foco estratégico", "como": "Los EE ven los recursos PME como propios; compras sin vínculo con resultados.", "consecuencia": "El gasto no tributa a las metas ENEP ni al CGE."}, {"id": "T3", "tipo": "Tensión", "tema": "Carga visible vs. carga invisible", "como": "Jurídica: la visación y la “legalidad estratégica” no están escritas en ningún instrumento.\nLo mismo ocurre con apoyo de monitoreo de datos para unidades técnicas, que resulta relevante para la toma de decisiones.", "consecuencia": "Se subestima la capacidad necesaria y no se planifican los tiempos de visación.\nSe visualiza la misma situación en Unidad de Planificación (dotación necesaria)."}, {"id": "T4", "tipo": "Tensión", "tema": "Dato disponible vs. capacidad de análisis", "como": "UATP no tiene a nadie con capacidad experta de monitoreo; el SIMCE no llega directo al Servicio.", "consecuencia": "Decisiones pedagógicas y de compra sin evidencia."}, {"id": "T5", "tipo": "Tensión", "tema": "Especialización vs. polifuncionalidad", "como": "Procesos concentrados en una persona en compras.", "consecuencia": "Cuellos de botella personales en los meses críticos."}], "brechas_oficio": [{"id": "B1", "area": "UATP", "instruccion": "Plan anual de acompañamiento a más tardar el mes posterior a SIMCE", "plotter": "SIMCE e IDPS en marzo; Plan Global UATP en febrero", "brecha": "El Plan Global se crea antes de los resultados: hay que fijar cuándo se ajusta (junio)"}, {"id": "B2", "area": "UATP", "instruccion": "Registro de cada visita (propósito, acuerdos, avances)", "plotter": "“Monitoreo: clave, no existe”", "brecha": "Brecha crítica: sin sistema de registro"}, {"id": "B3", "area": "UATP", "instruccion": "Coherencia con ENEP, PEL y PAL; evitar sobreintervención", "plotter": "Planes obligatorios múltiples en marzo", "brecha": "Riesgo de saturar a los EE en el inicio del año"}, {"id": "B4", "area": "Administración y Finanzas", "instruccion": "Sostenibilidad: evitar sobredotación y atrasos con proveedores", "plotter": "Cierre 2026, pago oportuno de proveedores", "brecha": "El control de dotación queda en Personas; falta hito conjunto (en particular, en reemplazos)"}, {"id": "B5", "area": "Administración y Finanzas", "instruccion": "Reemplazos (art. 22 j): informe trimestral a DIPRES", "plotter": "Reportes trimestrales (Personas)", "brecha": "Sin responsable único DAF–Personas"}, {"id": "B6", "area": "Administración y Finanzas", "instruccion": "Compras: licitación como regla; prohibido fraccionar", "plotter": "PAC 2027 por EE; compra ágil", "brecha": "Si no se planifica a tiempo es muy probable caer en la fragmentación"}, {"id": "B7", "area": "Infraestructura", "instruccion": "Contingencias de seguridad informadas en máx. 24 h", "plotter": "Gabinete: “resolución de contingencias”", "brecha": "Sin protocolo compartido Infraestructura–Gabinete"}, {"id": "B8", "area": "Unidad Jurídica", "instruccion": "Visar legalidad con foco en compras, personas y recursos", "plotter": "Visto bueno en procesos de otras unidades", "brecha": "Visación reactiva, sin calendario acordado con DAF y Personas"}, {"id": "B9", "area": "Unidad Jurídica", "instruccion": "Ley 19.880 y probidad (Leyes 20.285 y 20.730)", "plotter": "Manuales y capacitación “deberían” estar", "brecha": "Hitos sin fecha comprometida"}], "ejes": [{"eje": "1", "nombre": "Foco pedagógico guiado por datos", "descripcion": "Una línea estratégica 2027 acotada (pocos focos, ligados a metas ENEP) que ordene el Plan Global UATP, el PAL y el uso de recursos PME. Requiere crear el macroproceso de monitoreo que hoy no existe."}, {"eje": "2", "nombre": "Planificación que se ejecuta", "descripcion": "Un calendario institucional único con plazos de cierre por instrumento y/o subproceso (PAL, PEL, CDC, PMG, CGE, Plan de compras, Dotación), con responsables y fechas de entrega entre unidades."}, {"eje": "3", "nombre": "Compras y dotación alineadas a la estrategia", "descripcion": "El plan de compras se coordina en plazos de licitación entre compras y Jurídica, e incluye los tiempos de visación para evitar peaks de ambas unidades."}, {"eje": "4", "nombre": "Legalidad preventiva y capacidad de soporte", "descripcion": "Pasar de una Jurídica reactiva a una que fija estándares (manuales, bases tipo, capacitación) y reforzar con personas polifuncionales los meses críticos."}], "compromisos": [{"id": "C01", "accion": "Calendario institucional único oct 2026 – jun 2027 con fechas de entrega entre unidades", "eje": "2", "responsable": "PyCG con Gabinete", "plazo": "Octubre 2026", "plazo_fecha": "2026-10-31", "estado": "Pendiente"}, {"id": "C02", "accion": "Plan de compras 2027 con tiempos de visación y licitaciones del inicio de clases adjudicadas", "eje": "3", "responsable": "DAF con Jurídica", "plazo": "Licitaciones cerradas en enero 2027", "plazo_fecha": "2027-01-31", "estado": "Pendiente"}, {"id": "C03", "accion": "Definición de focos estratégicos 2027 y conversación con directores", "eje": "1", "responsable": "Gabinete con UATP", "plazo": "Enero 2027", "plazo_fecha": "2027-01-31", "estado": "Pendiente"}, {"id": "C04", "accion": "Diseño del macroproceso de monitoreo (indicadores, tablero, registro de visitas)", "eje": "1", "responsable": "UATP con PyCG", "plazo": "Piloto en febrero 2027", "plazo_fecha": "2027-02-28", "estado": "Pendiente"}, {"id": "C05", "accion": "Plan de capacitaciones comprado para ejecución en el primer semestre", "eje": "1", "responsable": "UATP y Gestión de Personas con DAF", "plazo": "Ene – feb 2027", "plazo_fecha": "2027-02-28", "estado": "Pendiente"}, {"id": "C06", "accion": "Plan de mantenimiento TI y servicios generales y plan de mantención de EE", "eje": "3", "responsable": "DAF e Infraestructura", "plazo": "Antes del 1 mar 2027", "plazo_fecha": "2027-02-28", "estado": "Pendiente"}, {"id": "C07", "accion": "Actualización priorizada de manuales y bases tipo (convenios, contratos, sumarios)", "eje": "4", "responsable": "Jurídica", "plazo": "Primer semestre 2027", "plazo_fecha": "2027-06-30", "estado": "Pendiente"}, {"id": "C08", "accion": "Equipo polifuncional de apoyo para peaks en procesos de compra", "eje": "4", "responsable": "DAF, Jurídica, Gestión de Personas", "plazo": "Noviembre 2026", "plazo_fecha": "2026-11-30", "estado": "Pendiente"}, {"id": "C09", "accion": "Ajuste del plan de acompañamiento con resultados SIMCE (exigencia del Oficio)", "eje": "1", "responsable": "UATP", "plazo": "Junio 2027", "plazo_fecha": "2027-06-30", "estado": "Pendiente"}, {"id": "C10", "accion": "Articulación entre unidades para activar el Comité de ausentismo laboral y generar acciones para su reducción", "eje": "4", "responsable": "Gestión de Personas con Jurídica", "plazo": "Diciembre 2026", "plazo_fecha": "2026-12-31", "estado": "Pendiente"}], "acuerdos": [{"id": "AC01", "acuerdo": "Cerrar las licitaciones del inicio del año escolar en noviembre, no en marzo."}, {"id": "AC02", "acuerdo": "Incluir los tiempos de visación jurídica dentro de la planificación de compras."}, {"id": "AC03", "acuerdo": "Definir para 2027 una línea estratégica que ordene recursos, compras, metas e indicadores, conversada con los directores antes de aplicarla."}, {"id": "AC04", "acuerdo": "Exigir que cada compra relevante se justifique con datos y tribute a una meta."}, {"id": "AC05", "acuerdo": "Elaborar el plan de mantenimiento TI y servicios generales entre octubre y febrero, listo antes del 1 de marzo."}, {"id": "AC06", "acuerdo": "Licitar las capacitaciones en enero–febrero para ejecutarlas en el primer semestre."}, {"id": "AC07", "acuerdo": "Formar profesionales polifuncionales que apoyen en los peaks de compras."}, {"id": "AC08", "acuerdo": "Revitalizar y operacionalizar los instrumentos de gestión: qué, cuándo, quién y cómo."}, {"id": "AC09", "acuerdo": "Entregar un sello institucional SLEP Llanquihue desde Gestión de Personas."}, {"id": "AC10", "acuerdo": "Vincularse con toda la comunidad educativa y llegar a permear institucionalmente a apoderados y estudiantes."}, {"id": "AC11", "acuerdo": "Establecer una estrategia comunicacional (¿qué queremos mostrar y dónde están los énfasis?)."}, {"id": "AC12", "acuerdo": "Reforzar el análisis conjunto para convenios y donaciones con privados (alinear a lo que el Servicio requiere y no a lo que se viene a ofrecer): revisar y filtrar."}, {"id": "AC13", "acuerdo": "Generar una articulación para el funcionamiento del Comité de ausentismo y gestión para la reducción de ausencias laborales."}, {"id": "AC14", "acuerdo": "Revisar a la brevedad las licitaciones críticas (suministro de mantenciones y transporte escolar)."}]};
+const __DEFAULTS = { unidad: null, macro: null, individuales: true, vista: 'unidad' };
+let __params = { ...__DEFAULTS };
+const __calcs = {}, __memo = {};
+let __cb = null;
+const dash = {
+  colors: ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', 'var(--s5)', 'var(--s6)', 'var(--s7)', 'var(--s8)'],
+  calc(id, def) { __calcs[id] = def; },
+  data(id) {
+    if (__DATA[id]) return { status: 'ok', data: __DATA[id] };
+    if (__memo[id]) return __memo[id];
+    const def = __calcs[id];
+    if (!def) return { status: 'error', data: [] };
+    try {
+      const args = def.inputs.map((i) => dash.data(i).data);
+      __memo[id] = { status: 'ok', data: def.fn(...args) };
+    } catch (e) { console.error(id, e); __memo[id] = { status: 'error', data: [] }; }
+    return __memo[id];
+  },
+  params() { return { ...__params }; },
+  setParams(o) { __params = { ...__params, ...o }; __cb && __cb(); },
+  resetParams() { __params = { ...__DEFAULTS }; __cb && __cb(); },
+  setLink(id) { try { history.replaceState(null, '', '#' + id); } catch (e) {} },
+  onData(fn) { __cb = fn; },
+};
+
+
+const UNITS = ['DAF', 'UATP', 'Planificación y Control de Gestión', 'Infraestructura', 'Jurídica', 'Gabinete', 'Gestión de Personas'];
+const SHORT = { 'Planificación y Control de Gestión': 'PyCG', 'Gestión de Personas': 'Gestión de Personas' };
+const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const MESL = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const D0 = new Date(Date.UTC(2026, 9, 1)), D1 = new Date(Date.UTC(2027, 6, 1));
+const color = (u) => dash.colors[Math.max(0, UNITS.indexOf(u)) % dash.colors.length];
+const fdate = (d) => d.getUTCDate() + ' ' + MES[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+const P = (s) => new Date(s + 'T00:00:00Z');
+const root = document.querySelector('.slp');
+
+dash.calc('carga_semanal', {
+  title: 'Carga concurrente semanal',
+  description: 'Por cada semana (lunes a domingo), cuántas unidades tienen una franja de peak activa.',
+  inputs: ['peaks'],
+  fn: (peaks) => {
+    const day = 864e5, out = [];
+    for (let t = Date.UTC(2026, 8, 28); t <= Date.UTC(2027, 5, 28); t += 7 * day) {
+      const fin = t + 6 * day;
+      const u = [...new Set(peaks.filter((p) => Date.parse(p.inicio) <= fin && Date.parse(p.fin) >= t).map((p) => p.unidad))];
+      out.push({ semana: new Date(t).toISOString().slice(0, 10), unidades: u.length, lista: u.join(', ') });
+    }
+    return out;
+  },
+});
+
+dash.calc('nudos', {
+  title: 'Períodos de nudo crítico',
+  description: 'Semanas consecutivas con 5 o más unidades en peak a la vez.',
+  inputs: ['carga_semanal'],
+  fn: (carga_semanal) => {
+    const M = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const f = (t) => { const d = new Date(t); return d.getUTCDate() + ' ' + M[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
+    const out = []; let cur = null;
+    for (const w of carga_semanal) {
+      if (w.unidades >= 5) {
+        if (!cur) cur = { desde: w.semana, hasta: w.semana, max: 0, set: new Set() };
+        cur.hasta = w.semana; cur.max = Math.max(cur.max, w.unidades); w.lista.split(', ').forEach((x) => cur.set.add(x));
+      } else if (cur) { out.push(cur); cur = null; }
+    }
+    if (cur) out.push(cur);
+    return out.map((c) => ({ periodo: f(Date.parse(c.desde)) + ' – ' + f(Date.parse(c.hasta) + 6 * 864e5), semanas: Math.round((Date.parse(c.hasta) - Date.parse(c.desde)) / 6048e5) + 1, max_unidades: c.max, unidades: [...c.set].join(', ') }));
+  },
+});
+
+dash.calc('carga_mensual', {
+  title: 'Carga por unidad y mes',
+  description: 'Días de cada mes (oct 2026 – jun 2027) cubiertos por una franja de peak de la unidad, y su porcentaje.',
+  inputs: ['peaks'],
+  fn: (peaks) => {
+    const M = ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'], out = [];
+    const units = [...new Set(peaks.map((p) => p.unidad))];
+    for (const u of units) for (let i = 0; i < 9; i++) {
+      const y = i < 3 ? 2026 : 2027, m = (9 + i) % 12, a = Date.UTC(y, m, 1), b = Date.UTC(y, m + 1, 1), n = (b - a) / 864e5;
+      let d = 0;
+      for (let t = a; t < b; t += 864e5) if (peaks.some((p) => p.unidad === u && Date.parse(p.inicio) <= t && Date.parse(p.fin) >= t)) d++;
+      out.push({ celda: u + ' · ' + M[i], unidad: u, mes: M[i], mes_idx: i, dias: d, porcentaje: Math.round((d / n) * 100) });
+    }
+    return out;
+  },
+});
+
+dash.calc('por_macro', {
+  title: 'Post-it por macroproceso',
+  description: 'Cantidad de post-it (hitos y estrellas) asignados a cada macroproceso.',
+  inputs: ['macroprocesos', 'hitos'],
+  fn: (macroprocesos, hitos) => macroprocesos.map((m) => ({ macro: m.codigo, postit: hitos.filter((h) => h.macro === m.codigo).length })),
+});
+
+dash.calc('por_eje', {
+  title: 'Compromisos por eje',
+  description: 'Cantidad de compromisos de la hoja de ruta en cada eje estratégico, y cuántos están cumplidos y en curso.',
+  inputs: ['ejes', 'compromisos'],
+  fn: (ejes, compromisos) => ejes.map((e) => { const c = compromisos.filter((x) => x.eje === e.eje); return { eje: e.eje, compromisos: c.length, cumplidos: c.filter((x) => x.estado === 'Cumplido').length, en_curso: c.filter((x) => x.estado === 'En curso').length }; }),
+});
+
+dash.calc('resumen', {
+  title: 'Resumen del calendario',
+  description: 'Totales de macroprocesos, hitos, estrellas y franjas, y el tramo con más unidades en peak.',
+  inputs: ['macroprocesos', 'hitos', 'peaks', 'carga_semanal', 'hitos_individuales'],
+  fn: (macroprocesos, hitos, peaks, carga_semanal, hitos_individuales) => {
+    const M = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const f = (t) => { const d = new Date(t); return d.getUTCDate() + ' de ' + M[d.getUTCMonth()] + ' de ' + d.getUTCFullYear(); };
+    const max = Math.max(...carga_semanal.map((w) => w.unidades));
+    const top = carga_semanal.filter((w) => w.unidades === max);
+    return [{
+      macroprocesos: macroprocesos.filter((m) => m.estado === 'Identificado en el plotter').length,
+      hitos_individuales: hitos_individuales.length,
+      hitos: hitos.filter((h) => h.tipo === 'Hito').length,
+      dependencias: hitos.filter((h) => h.tipo !== 'Hito').length,
+      peaks: peaks.length,
+      semanas_criticas: carga_semanal.filter((w) => w.unidades >= 5).length,
+      max_unidades: max,
+      peak_desde: f(Date.parse(top[0].semana)),
+      peak_hasta: f(Date.parse(top[top.length - 1].semana) + 6 * 864e5),
+    }];
+  },
+});
+
+dash.calc('dependencias', {
+  title: 'Dependencias cruzadas con peaks',
+  description: 'Cada estrella o post-it con “Requiere a”, por unidad requerida, marcado según si cae dentro (o hasta 14 días antes) de un peak de esa unidad. Unidad de Compras y Finanzas se cruzan con DAF; GT y Gestión Territorial, con Gabinete.',
+  inputs: ['hitos', 'peaks'],
+  fn: (hitos, peaks) => {
+    const U = ['DAF', 'UATP', 'Planificación y Control de Gestión', 'Infraestructura', 'Jurídica', 'Gabinete', 'Gestión de Personas'];
+    const M = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const f = (s) => { const d = new Date(s + 'T00:00:00Z'); return d.getUTCDate() + ' ' + M[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
+    const lab = (p) => p.etiqueta + ' (' + f(p.inicio) + ' – ' + f(p.fin) + ')';
+    const out = [];
+    const alias = (x) => U.find((v) => x.includes(v)) || (x === 'PyCG' ? 'Planificación y Control de Gestión' : null) || (/Compras|Finanzas/.test(x) ? 'DAF' : /Gestión Territorial|\bGT\b/.test(x) ? 'Gabinete' : null);
+    hitos.filter((h) => h.requiere && h.inicio).forEach((h) => {
+      const t = Date.parse(h.inicio), seen = new Set();
+      const parts = h.requiere.replace(/Planificación y Control de Gestión/g, 'PyCG').split(/,| y /).map((x) => x.trim()).filter(Boolean);
+      parts.forEach((x) => {
+        const u = alias(x);
+        if (u === h.unidad || seen.has(u || x)) return;
+        seen.add(u || x);
+        const base = { clave: h.id + ' → ' + (u || x), estrella: h.id, fecha: f(h.inicio), solicitante: h.unidad, requiere: u || x, texto: h.texto };
+        if (!u) { out.push({ ...base, en_peak: 'Sin franja', peak: '' }); return; }
+        const own = peaks.filter((p) => p.unidad === u);
+        const p = own.find((p) => Date.parse(p.inicio) <= t && Date.parse(p.fin) >= t);
+        const n = own.find((p) => Date.parse(p.inicio) > t && Date.parse(p.inicio) - t <= 14 * 864e5);
+        out.push({ ...base, en_peak: p ? 'Sí' : n ? 'Próximo' : 'No', peak: p ? lab(p) : n ? lab(n) : '' });
+      });
+    });
+    return out;
+  },
+});
+
+dash.calc('resumen_dep', {
+  title: 'Resumen de dependencias',
+  description: 'Totales de solicitudes entre unidades, cuántas coinciden con un peak y la unidad más requerida.',
+  inputs: ['dependencias'],
+  fn: (dependencias) => {
+    const n = {};
+    dependencias.filter((d) => d.en_peak !== 'Sin franja').forEach((d) => { n[d.requiere] = (n[d.requiere] || 0) + 1; });
+    const c = Object.entries(n).sort((a, b) => b[1] - a[1]);
+    const S = { 'Planificación y Control de Gestión': 'PyCG', 'Gestión de Personas': 'GP' };
+    return [{
+      solicitudes: dependencias.length,
+      en_peak: dependencias.filter((d) => d.en_peak === 'Sí').length,
+      proximo: dependencias.filter((d) => d.en_peak === 'Próximo').length,
+      mas_requerida: c.filter((x) => x[1] === c[0][1]).map((x) => S[x[0]] || x[0]).join(' / '),
+    }];
+  },
+});
+
+/* ---------- filtros y pestañas ---------- */
+const chips = root.querySelector('.slp-chips');
+UNITS.forEach((u) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'slp-chip'; b.dataset.u = u;
+  const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = color(u);
+  b.append(sw, document.createTextNode(SHORT[u] || u));
+  b.addEventListener('click', () => dash.setParams({ unidad: dash.params().unidad === u ? null : u }));
+  chips.append(b);
+});
+const msel = root.querySelector('.slp-macro-sel');
+msel.addEventListener('change', () => dash.setParams({ macro: msel.value || null }));
+root.querySelector('.slp-reset').addEventListener('click', () => dash.resetParams());
+let pane = 'calendario';
+const showPane = (id) => {
+  pane = id;
+  root.querySelectorAll('.slp-tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.pane === id)));
+  root.querySelectorAll('.slp-pane').forEach((s) => { s.hidden = s.dataset.tab !== id; });
+  root.querySelector('.slp-tabs').hidden = id === 'detalle';
+  if (id !== 'calendario') window.scrollTo({ top: 0 });
+  dash.setLink(id);
+  draw();
+};
+root.querySelectorAll('.slp-tabs button').forEach((b) => b.addEventListener('click', () => showPane(b.dataset.pane)));
+root.querySelector('.slp-go-detalle').addEventListener('click', () => showPane('detalle'));
+root.querySelector('.slp-back').addEventListener('click', () => showPane('calendario'));
+root.querySelector('.slp-banner-go').addEventListener('click', () => { showPane('coordinacion'); root.querySelector('#nudos').scrollIntoView({ behavior: 'smooth' }); });
+let q = '', sortK = 'inicio', sortDir = 1;
+root.querySelector('.slp-q').addEventListener('input', (e) => { q = e.target.value.toLowerCase(); draw(); });
+root.querySelectorAll('.slp-htable th button').forEach((b) => b.addEventListener('click', () => {
+  if (sortK === b.dataset.k) sortDir = -sortDir; else { sortK = b.dataset.k; sortDir = 1; }
+  draw();
+}));
+
+const pass = (h) => {
+  const { unidad, macro } = dash.params();
+  if (macro && h.macro !== macro) return false;
+  if (unidad && h.unidad !== unidad && !(h.requiere || '').includes(unidad)) return false;
+  return true;
+};
+
+const passInd = (h) => {
+  const { unidad, macro } = dash.params();
+  if (macro && h.macro !== macro) return false;
+  if (unidad && h.unidad !== unidad) return false;
+  return true;
+};
+root.querySelectorAll('.slp-vista').forEach((b) => b.addEventListener('click', () => dash.setParams({ vista: b.dataset.v })));
+const indBtn = root.querySelector('.slp-ind');
+indBtn.addEventListener('click', () => dash.setParams({ individuales: !dash.params().individuales }));
+
+/* ---------- tooltip ---------- */
+const tipFor = (box) => box.parentElement.querySelector('.slp-tip');
+const showTip = (box, ev, lines) => {
+  const tip = tipFor(box), r = box.parentElement.getBoundingClientRect();
+  tip.replaceChildren();
+  lines.forEach(([cls, txt], i) => { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = txt; if (i === 0 && !cls) d.className = 't1'; tip.append(d); });
+  tip.hidden = false;
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = ev.clientX - r.left + 12, y = ev.clientY - r.top + 12;
+  if (x + tw > r.width) x = Math.max(0, ev.clientX - r.left - tw - 12);
+  if (y + th > r.height) y = Math.max(0, ev.clientY - r.top - th - 12);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+};
+const hideTip = (box) => { tipFor(box).hidden = true; };
+
+/* ---------- línea de tiempo ---------- */
+function drawTimeline(hitos, peaks, ind, cont, macros) {
+  const box = root.querySelector('#timeline');
+  box.querySelectorAll('.slp-ph').forEach((n) => n.remove());
+  const W = Math.max(box.clientWidth, 720), left = dash.params().vista === 'macro' ? 190 : 150, right = 16, top = 46;
+  const x = d3.scaleUtc([D0, D1], [left, W - right]);
+  const { unidad, individuales, macro } = dash.params();
+  const porMacro = dash.params().vista === 'macro';
+  const mk = (h, src) => {
+    const a = P(h.inicio), b = P(h.fin), a2 = a < D0 ? D0 : a;
+    return { h, src, lane: porMacro ? h.macro : h.unidad, x0: x(a2), x1: Math.min(x(b), W - right), range: h.inicio !== h.fin, beyond: b > D1, before: a < D0 };
+  };
+  const items = [
+    ...hitos.filter((h) => h.inicio).map((h) => mk(h, 'col')),
+    ...(individuales ? ind.filter((h) => h.inicio && P(h.fin) >= D0).map((h) => mk(h, 'ind')) : []),
+  ];
+  const keys = porMacro ? macros.map((m) => m.codigo) : UNITS;
+  const lanes = keys.map((u) => {
+    const its = items.filter((i) => i.lane === u).sort((a, b) => a.x0 - b.x0);
+    const ends = [];
+    its.forEach((i) => {
+      const s = i.x0 - 9, e = (i.range ? i.x1 : i.x0) + 9;
+      let k = ends.findIndex((v) => v < s); if (k < 0) { k = ends.length; ends.push(0); }
+      ends[k] = e; i.track = k;
+    });
+    return { u, its, tracks: Math.max(1, ends.length) };
+  });
+  let y = top;
+  lanes.forEach((l) => { l.h = Math.max(54, l.tracks * 15 + 30); l.y = y; y += l.h; });
+  const H = y + 8;
+  const svg = d3.select(box).selectAll('svg').data([0]).join('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('min-width', '720px');
+  svg.selectAll('*').remove();
+  const q = [['4° trimestre 2026', D0, P('2027-01-01')], ['1° trimestre 2027', P('2027-01-01'), P('2027-04-01')], ['2° trimestre 2027', P('2027-04-01'), D1]];
+  svg.append('g').selectAll('rect').data(q).join('rect').attr('x', (d) => x(d[1]) + 1).attr('width', (d) => x(d[2]) - x(d[1]) - 2).attr('y', 2).attr('height', 18).attr('rx', 4).attr('fill', 'var(--cds-chart-muted)').attr('opacity', .35);
+  svg.append('g').selectAll('text').data(q).join('text').attr('x', (d) => (x(d[1]) + x(d[2])) / 2).attr('y', 15).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg)').text((d) => d[0]);
+  const months = d3.utcMonth.range(D0, D1);
+  svg.append('g').selectAll('line').data(months).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', top - 4).attr('y2', H - 8).attr('stroke', 'var(--cds-chart-grid)').attr('stroke-dasharray', '2 3');
+  svg.append('g').selectAll('text').data(months).join('text').attr('x', (d) => x(d3.utcDay.offset(d, 15))).attr('y', top - 10).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((d) => MESL[d.getUTCMonth()].slice(0, W < 900 ? 3 : 10));
+  const g = svg.append('g');
+  lanes.forEach((l, i) => {
+    const dim = porMacro ? (macro && macro !== l.u ? .18 : 1) : (unidad && unidad !== l.u ? .18 : 1);
+    const lg = g.append('g').attr('opacity', dim);
+    if (i % 2 === 0) lg.append('rect').attr('x', 0).attr('width', W).attr('y', l.y).attr('height', l.h).attr('fill', 'var(--cds-chart-grid)').attr('opacity', .25);
+    if (porMacro) {
+      const m = macros.find((mm) => mm.codigo === l.u);
+      const nm = m.nombre.length > 24 ? m.nombre.slice(0, 23) + '…' : m.nombre;
+      lg.append('text').attr('x', 4).attr('y', l.y + l.h / 2 - 2).attr('font-size', 12).attr('font-weight', 500).attr('fill', 'var(--color-fg)').text(m.codigo);
+      lg.append('text').attr('x', 4).attr('y', l.y + l.h / 2 + 13).attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text(nm);
+      lg.append('rect').attr('x', 0).attr('width', left - 8).attr('y', l.y).attr('height', l.h).attr('fill', 'transparent')
+        .on('mousemove', (ev) => showTip(box, ev, [['', m.codigo + ' · ' + m.nombre], [null, 'Ámbito: ' + m.ambito], [null, l.its.length + ' elementos en el calendario']])).on('mouseleave', () => hideTip(box));
+      if (!l.its.length) lg.append('text').attr('x', left + 8).attr('y', l.y + l.h / 2 + 4).attr('font-size', 11).attr('fill', 'var(--color-bad)').text(m.estado === 'Identificado en el plotter' ? 'Sin hitos asignados' : 'Sin hitos: ' + m.estado.toLowerCase());
+    } else {
+      lg.append('circle').attr('cx', 10).attr('cy', l.y + l.h / 2).attr('r', 5).attr('fill', color(l.u));
+      lg.append('text').attr('x', 20).attr('y', l.y + l.h / 2 + 4).attr('font-size', 12).attr('fill', 'var(--color-fg)').text(SHORT[l.u] || l.u);
+    }
+    if (!porMacro) peaks.filter((p) => p.unidad === l.u).forEach((p) => {
+      const a = x(P(p.inicio)), b = x(P(p.fin));
+      lg.append('rect').attr('x', a).attr('width', Math.max(2, b - a)).attr('y', l.y + 8).attr('height', l.h - 18).attr('rx', 6)
+        .attr('fill', color(l.u)).attr('fill-opacity', .16).attr('stroke', color(l.u)).attr('stroke-opacity', .55).attr('stroke-dasharray', '5 3')
+        .on('mousemove', (ev) => showTip(box, ev, [['', 'Peak de carga (plotter colectivo) · ' + p.etiqueta], [null, fdate(P(p.inicio)) + ' – ' + fdate(P(p.fin))], ...(p.nota ? [[null, p.nota]] : [])])).on('mouseleave', () => hideTip(box));
+    });
+    if (individuales && !porMacro) cont.filter((c) => c.unidad === l.u).forEach((c) => {
+      const a = x(P(c.inicio) < D0 ? D0 : P(c.inicio)), b = Math.min(x(P(c.fin)), W - right);
+      const yy = c.tipo === 'Peak' ? l.y + l.h - 5 : l.y + 4;
+      lg.append('line').attr('x1', a + 2).attr('x2', b - 2).attr('y1', yy).attr('y2', yy).attr('stroke', color(l.u)).attr('stroke-width', c.tipo === 'Peak' ? 3.5 : 2)
+        .attr('stroke-linecap', 'round').attr('stroke-dasharray', c.tipo === 'Peak' ? null : '1 4').attr('stroke-opacity', .85);
+      lg.append('line').attr('x1', a).attr('x2', b).attr('y1', yy).attr('y2', yy).attr('stroke', 'transparent').attr('stroke-width', 9)
+        .on('mousemove', (ev) => showTip(box, ev, [['', (c.tipo === 'Peak' ? 'Peak según plotter individual' : 'Carga continua') + ' · ' + (SHORT[c.unidad] || c.unidad)], [null, c.descripcion], [null, fdate(P(c.inicio)) + ' – ' + fdate(P(c.fin))]])).on('mouseleave', () => hideTip(box));
+    });
+    const base = l.y + l.h / 2 - ((l.tracks - 1) * 15) / 2;
+    l.its.forEach((it) => {
+      const h = it.h, yy = base + it.track * 15, c = color(h.unidad), ind = it.src === 'ind';
+      const op = (ind ? passInd(h) : pass(h)) ? 1 : .15;
+      const mg = lg.append('g').attr('opacity', op).style('cursor', 'pointer');
+      if (it.range) {
+        mg.append('line').attr('x1', it.x0).attr('x2', it.x1).attr('y1', yy).attr('y2', yy).attr('stroke', c).attr('stroke-width', ind ? 2 : 4).attr('stroke-linecap', 'round').attr('stroke-dasharray', ind ? '4 3' : null);
+        if (it.beyond) mg.append('path').attr('d', `M${it.x1 - 2},${yy - 6} L${it.x1 + 6},${yy} L${it.x1 - 2},${yy + 6} Z`).attr('fill', c);
+      }
+      if (ind) mg.append('circle').attr('cx', it.x0).attr('cy', yy).attr('r', 5).attr('fill', 'var(--color-panel)').attr('stroke', c).attr('stroke-width', 2);
+      else if (h.tipo === 'Hito') mg.append('circle').attr('cx', it.x0).attr('cy', yy).attr('r', 6).attr('fill', c).attr('stroke', 'var(--color-bg)').attr('stroke-width', 1.5);
+      else mg.append('path').attr('transform', `translate(${it.x0},${yy})`).attr('d', d3.symbol(d3.symbolStar, 120)()).attr('fill', 'var(--color-panel)').attr('stroke', c).attr('stroke-width', 1.6);
+      const lines = ind
+        ? [['', h.id + ' · ' + h.periodo + ' · ' + (SHORT[h.unidad] || h.unidad) + ' · plotter individual'], [null, h.texto + (h.condicion ? ' (' + h.condicion + ')' : '')], ...(h.nota ? [[null, h.nota]] : [])]
+        : [['', h.id + ' · ' + h.periodo + ' · ' + (SHORT[h.unidad] || h.unidad) + (h.codigo ? ' · código ' + h.codigo : '')], [null, h.texto]];
+      lines.push([null, 'Macroproceso: ' + h.macro]);
+      if (!ind && h.requiere) lines.push([null, '★ Requiere a: ' + h.requiere]);
+      if (!ind && h.junto_a) lines.push([null, 'Junto a ' + h.junto_a]);
+      mg.on('mousemove', (ev) => showTip(box, ev, lines)).on('mouseleave', () => hideTip(box)).on('click', (ev) => showTip(box, ev, lines));
+    });
+  });
+  const now = new Date();
+  if (now > D0 && now < D1) {
+    svg.append('line').attr('x1', x(now)).attr('x2', x(now)).attr('y1', top - 4).attr('y2', H - 8).attr('stroke', 'var(--cds-chart-reference)').attr('stroke-width', 1.5);
+    svg.append('text').attr('x', x(now) + 4).attr('y', H - 10).attr('font-size', 10).attr('fill', 'var(--color-fg-muted)').text('Hoy');
+  }
+  const leg = root.querySelector('#leyenda-tl');
+  leg.replaceChildren();
+  const add = (svgStr, txt) => { const s = document.createElement('span'); const i = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); i.setAttribute('width', '22'); i.setAttribute('height', '14'); i.innerHTML = svgStr; s.append(i, document.createTextNode(txt)); leg.append(s); };
+  add('<circle cx="7" cy="7" r="5" fill="var(--color-fg-muted)"/>', 'Hito (plotter colectivo)');
+  add('<line x1="2" x2="20" y1="7" y2="7" stroke="var(--color-fg-muted)" stroke-width="4" stroke-linecap="round"/>', 'Hito con período');
+  add('<path transform="translate(8,7)" d="' + d3.symbol(d3.symbolStar, 70)() + '" fill="none" stroke="var(--color-fg-muted)" stroke-width="1.4"/>', 'Dependencia ★');
+  if (!porMacro) add('<rect x="1" y="2" width="20" height="10" rx="4" fill="var(--color-fg-muted)" fill-opacity=".16" stroke="var(--color-fg-muted)" stroke-dasharray="4 2"/>', 'Peak (plotter colectivo)');
+  if (porMacro) UNITS.forEach((u) => add('<circle cx="7" cy="7" r="5" fill="' + color(u) + '"/>', SHORT[u] || u));
+  if (individuales) {
+    add('<circle cx="7" cy="7" r="4.5" fill="none" stroke="var(--color-fg-muted)" stroke-width="2"/>', 'Hito (plotter individual)');
+    if (!porMacro) {
+      add('<line x1="2" x2="20" y1="7" y2="7" stroke="var(--color-fg-muted)" stroke-width="3.5" stroke-linecap="round"/>', 'Peak (plotter individual)');
+      add('<line x1="2" x2="20" y1="7" y2="7" stroke="var(--color-fg-muted)" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 4"/>', 'Carga continua');
+    }
+  }
+}
+
+/* ---------- carga semanal ---------- */
+function drawWeeks(rows) {
+  const box = root.querySelector('#carga');
+  box.querySelectorAll('.slp-ph').forEach((n) => n.remove());
+  const W = Math.max(box.clientWidth, 560), H = 220, m = { l: 34, r: 12, t: 12, b: 30 };
+  const xs = d3.scaleBand(rows.map((r) => r.semana), [m.l, W - m.r]).padding(.18);
+  const ys = d3.scaleLinear([0, 7], [H - m.b, m.t]);
+  const svg = d3.select(box).selectAll('svg').data([0]).join('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('min-width', '560px');
+  svg.selectAll('*').remove();
+  svg.append('g').selectAll('line').data(d3.range(0, 8)).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', (d) => ys(d)).attr('y2', (d) => ys(d)).attr('stroke', 'var(--cds-chart-grid)');
+  svg.append('g').selectAll('text').data(d3.range(0, 8)).join('text').attr('x', m.l - 6).attr('y', (d) => ys(d) + 4).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((d) => d);
+  svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', ys(5)).attr('y2', ys(5)).attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+  svg.append('g').selectAll('rect').data(rows).join('rect')
+    .attr('x', (r) => xs(r.semana)).attr('width', xs.bandwidth()).attr('y', (r) => ys(r.unidades)).attr('height', (r) => ys(0) - ys(r.unidades)).attr('rx', 3)
+    .attr('fill', (r) => r.unidades >= 5 ? 'var(--cds-chart-status-critical)' : 'var(--cds-chart-muted)')
+    .on('mousemove', (ev, r) => showTip(box, ev, [['', 'Semana del ' + fdate(P(r.semana))], [null, r.unidades + ' unidades en peak'], [null, r.lista || '—']]))
+    .on('mouseleave', () => hideTip(box));
+  const ticks = rows.filter((r) => d3.utcDay.offset(P(r.semana), 6).getUTCDate() <= 7);
+  svg.append('g').selectAll('text').data(ticks).join('text').attr('x', (r) => xs(r.semana)).attr('y', H - 10).attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((r) => MES[d3.utcDay.offset(P(r.semana), 6).getUTCMonth()]);
+}
+
+/* ---------- mapa de calor ---------- */
+function drawHeat(rows) {
+  const box = root.querySelector('#heatmap');
+  box.querySelectorAll('.slp-ph').forEach((n) => n.remove());
+  const months = ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
+  const units = UNITS.filter((u) => rows.some((r) => r.unidad === u));
+  const W = Math.max(box.clientWidth, 560), left = 150, top = 22, ch = 30;
+  const H = top + units.length * ch + 4;
+  const xs = d3.scaleBand(months, [left, W - 4]).padding(.06), ys = d3.scaleBand(units, [top, H - 4]).padding(.08);
+  const svg = d3.select(box).selectAll('svg').data([0]).join('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('min-width', '560px');
+  svg.selectAll('*').remove();
+  svg.append('g').selectAll('text').data(months).join('text').attr('x', (d) => xs(d) + xs.bandwidth() / 2).attr('y', 14).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((d) => d);
+  svg.append('g').selectAll('text').data(units).join('text').attr('x', 0).attr('y', (d) => ys(d) + ys.bandwidth() / 2 + 4).attr('font-size', 12).attr('fill', 'var(--color-fg)').text((d) => SHORT[d] || d);
+  const cells = svg.append('g').selectAll('g').data(rows.filter((r) => units.includes(r.unidad))).join('g');
+  cells.append('rect').attr('x', (r) => xs(r.mes)).attr('y', (r) => ys(r.unidad)).attr('width', xs.bandwidth()).attr('height', ys.bandwidth()).attr('rx', 4)
+    .attr('fill', (r) => color(r.unidad)).attr('fill-opacity', (r) => r.porcentaje ? .12 + .7 * r.porcentaje / 100 : .04)
+    .on('mousemove', (ev, r) => showTip(box, ev, [['', (SHORT[r.unidad] || r.unidad) + ' · ' + r.mes], [null, r.dias + ' días en peak (' + r.porcentaje + '%)']]))
+    .on('mouseleave', () => hideTip(box));
+  cells.append('text').attr('x', (r) => xs(r.mes) + xs.bandwidth() / 2).attr('y', (r) => ys(r.unidad) + ys.bandwidth() / 2 + 4).attr('text-anchor', 'middle').attr('font-size', 11).attr('pointer-events', 'none')
+    .attr('fill', 'var(--color-fg)').text((r) => r.porcentaje ? r.porcentaje + '%' : '');
+}
+
+/* ---------- grilla mes a mes ---------- */
+function drawMonths(hitos, ind) {
+  const box = root.querySelector('#grilla-meses');
+  box.replaceChildren();
+  const qn = (m) => m < 3 ? '4° trim. 2026' : m < 6 ? '1° trim. 2027' : '2° trim. 2027';
+  const cols = d3.range(9).map((i) => ({ i, y: i < 3 ? 2026 : 2027, m: (9 + i) % 12 }));
+  const make = (title, sub, list) => {
+    const c = document.createElement('div'); c.className = 'slp-month';
+    const h = document.createElement('h3'); h.textContent = title + ' '; const s = document.createElement('span'); s.className = 'q'; s.textContent = sub; h.append(s); c.append(h);
+    if (!list.length) { const e = document.createElement('div'); e.className = 'slp-lbl'; e.textContent = 'Sin post-it en este mes.'; c.append(e); }
+    list.forEach((hh) => {
+      const isInd = !hh.tipo;
+      const d = document.createElement('div'); d.className = 'slp-pi' + (isInd ? ' ind' : hh.tipo === 'Hito' ? '' : ' star'); d.style.borderLeftColor = color(hh.unidad);
+      const m1 = document.createElement('div'); m1.className = 'meta';
+      m1.textContent = (isInd ? 'Plotter individual · ' : hh.tipo === 'Hito' ? '' : '★ ') + (SHORT[hh.unidad] || hh.unidad) + (hh.codigo ? ' · ' + hh.codigo : '') + (hh.inicio !== hh.fin ? ' · ' + hh.periodo : '') + ' · ' + hh.id;
+      const t = document.createElement('div'); t.textContent = hh.texto + (hh.condicion ? ' (' + hh.condicion + ')' : '');
+      d.append(m1, t);
+      if (hh.requiere) { const r = document.createElement('div'); r.className = 'meta'; r.textContent = 'Requiere a: ' + hh.requiere; d.append(r); }
+      c.append(d);
+    });
+    box.append(c);
+  };
+  const vis = [...hitos.filter(pass), ...(dash.params().individuales ? ind.filter(passInd).filter((h) => !h.inicio || P(h.fin) >= D0).map((h) => (h.inicio && P(h.inicio) < D0 ? { ...h, inicio: '2026-10-01' } : h)) : [])];
+  cols.forEach((c) => make(MESL[c.m] + ' ' + c.y, qn(c.i), vis.filter((h) => h.inicio && P(h.inicio).getUTCMonth() === c.m && P(h.inicio).getUTCFullYear() === c.y).sort((a, b) => a.inicio < b.inicio ? -1 : 1)));
+  make('Fuera del horizonte o sin fecha', 'margen derecho del plotter y hitos sin fecha', vis.filter((h) => !h.inicio));
+}
+
+/* ---------- macroprocesos ---------- */
+function drawMacros(macros, hitos) {
+  const box = root.querySelector('#tarjetas-macro');
+  box.replaceChildren();
+  const sel = dash.params().macro;
+  macros.forEach((m) => {
+    const c = document.createElement('div'); c.className = 'slp-card slp-macro'; c.id = 'macro-' + m.codigo;
+    if (sel && sel !== m.codigo) c.style.opacity = .4;
+    const h = document.createElement('h2'); h.textContent = m.codigo + ' · ' + m.nombre;
+    const a = document.createElement('div'); a.className = 'amb'; a.textContent = 'Ámbito: ' + m.ambito;
+    if (m.codigo === 'MON') c.classList.add('slp-gap');
+    c.append(h, a);
+    const n = document.createElement('div'); n.className = 'amb'; n.style.marginTop = 'var(--cds-gap-sm)';
+    const big = document.createElement('span'); big.className = 'cnt'; big.dataset.source = 'por_macro'; big.dataset.field = 'postit'; big.dataset.where = 'macro=' + encodeURIComponent(m.codigo);
+    const pm = dash.data('por_macro');
+    const row = pm.status === 'ok' ? pm.data.find((r) => r.macro === m.codigo) : null;
+    big.textContent = row ? String(row.postit) : '—';
+    n.append(big, document.createTextNode(' post-it asignados'));
+    c.append(n);
+    if (m.componentes) {
+      const t = document.createElement('div'); t.className = 'amb'; t.style.marginTop = 'var(--cds-gap-sm)'; t.textContent = m.codigo === 'MON' ? 'Lo que debería contener:' : 'Subprocesos anotados en el plotter:';
+      const ul = document.createElement('ul'); m.componentes.split(' · ').forEach((x) => { const li = document.createElement('li'); li.textContent = x; ul.append(li); });
+      c.append(t, ul);
+    }
+    const hs = hitos.filter((x) => x.macro === m.codigo && x.tipo === 'Hito');
+    if (hs.length) {
+      const t = document.createElement('div'); t.className = 'amb'; t.style.marginTop = 'var(--cds-gap-sm)'; t.textContent = 'Hitos del calendario:';
+      const ul = document.createElement('ul'); hs.forEach((x) => { const li = document.createElement('li'); li.textContent = x.periodo + ' — ' + (SHORT[x.unidad] || x.unidad) + ': ' + x.texto; ul.append(li); });
+      c.append(t, ul);
+    }
+    if (m.fuente) { const f = document.createElement('p'); f.className = 'note'; f.style.margin = 'var(--cds-gap-sm) 0 0'; f.textContent = m.fuente; c.append(f); }
+    box.append(c);
+  });
+}
+
+/* ---------- matriz de dependencias ---------- */
+function drawMatrix(rows) {
+  const box = root.querySelector('#matriz-dep');
+  box.querySelectorAll('.slp-ph').forEach((n) => n.remove());
+  const rowsU = UNITS.filter((u) => rows.some((r) => r.solicitante === u));
+  const colsU = [...UNITS.filter((u) => rows.some((r) => r.requiere === u)), ...[...new Set(rows.map((r) => r.requiere))].filter((u) => !UNITS.includes(u))];
+  const W = Math.max(box.clientWidth, 560), left = 130, top = 40, ch = 40;
+  const H = top + rowsU.length * ch + 4;
+  const xs = d3.scaleBand(colsU, [left, W - 4]).padding(.08), ys = d3.scaleBand(rowsU, [top, H - 4]).padding(.1);
+  const svg = d3.select(box).selectAll('svg').data([0]).join('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('min-width', '560px');
+  svg.selectAll('*').remove();
+  svg.append('g').selectAll('text').data(colsU).join('text').attr('x', (d) => xs(d) + xs.bandwidth() / 2).attr('y', 26).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((d) => SHORT[d] || d);
+  svg.append('g').selectAll('text').data(rowsU).join('text').attr('x', 0).attr('y', (d) => ys(d) + ys.bandwidth() / 2 + 4).attr('font-size', 12).attr('fill', 'var(--color-fg)').text((d) => SHORT[d] || d);
+  const cells = d3.cross(rowsU, colsU).map(([a, b]) => ({ a, b, list: rows.filter((r) => r.solicitante === a && r.requiere === b) }));
+  const g = svg.append('g').selectAll('g').data(cells).join('g');
+  g.append('rect').attr('x', (c) => xs(c.b)).attr('y', (c) => ys(c.a)).attr('width', xs.bandwidth()).attr('height', ys.bandwidth()).attr('rx', 4)
+    .attr('fill', (c) => c.list.some((r) => r.en_peak === 'Sí') ? 'var(--cds-chart-status-critical)' : c.list.length ? color(c.b) : 'var(--cds-chart-grid)')
+    .attr('fill-opacity', (c) => c.list.length ? .55 : .3)
+    .on('mousemove', (ev, c) => c.list.length && showTip(box, ev, [['', (SHORT[c.a] || c.a) + ' requiere a ' + (SHORT[c.b] || c.b)], ...c.list.map((r) => [null, r.estrella + ' · ' + r.fecha + ' · ¿En peak? ' + r.en_peak])]))
+    .on('mouseleave', () => hideTip(box));
+  g.append('text').attr('x', (c) => xs(c.b) + xs.bandwidth() / 2).attr('y', (c) => ys(c.a) + ys.bandwidth() / 2 + 5).attr('text-anchor', 'middle').attr('font-size', 13).attr('pointer-events', 'none').attr('fill', 'var(--color-fg)').text((c) => c.list.length || '');
+}
+
+/* ---------- alertas y nudos ---------- */
+function drawAlerts(rows) {
+  const box = root.querySelector('#alertas-activas');
+  box.replaceChildren();
+  rows.filter((r) => r.tipo === 'Alerta activa').forEach((r) => {
+    const c = document.createElement('div'); c.className = 'slp-card slp-alert';
+    const k = document.createElement('div'); k.className = 'k'; k.textContent = '● ' + r.tipo + ' · ' + r.id;
+    const h = document.createElement('h3'); h.textContent = r.tema;
+    const p1 = document.createElement('p'); p1.textContent = r.como;
+    const p2 = document.createElement('p'); p2.style.color = 'var(--color-fg-muted)'; p2.textContent = r.consecuencia;
+    c.append(k, h, p1, p2); box.append(c);
+  });
+}
+function drawNudos(rows) {
+  const box = root.querySelector('#gantt-nudos');
+  box.querySelectorAll('.slp-ph').forEach((n) => n.remove());
+  const W = Math.max(box.clientWidth, 720), left = 230, right = 16, top = 26, lh = 40;
+  const H = top + rows.length * lh + 8;
+  const x = d3.scaleUtc([D0, D1], [left, W - right]);
+  const svg = d3.select(box).selectAll('svg').data([0]).join('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('min-width', '720px');
+  svg.selectAll('*').remove();
+  const months = d3.utcMonth.range(D0, D1);
+  svg.append('g').selectAll('line').data(months).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', top - 4).attr('y2', H - 4).attr('stroke', 'var(--cds-chart-grid)').attr('stroke-dasharray', '2 3');
+  svg.append('g').selectAll('text').data(months).join('text').attr('x', (d) => x(d3.utcDay.offset(d, 15))).attr('y', top - 10).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((d) => MES[d.getUTCMonth()]);
+  rows.forEach((r, i) => {
+    const y0 = top + i * lh, a = P(r.inicio) < D0 ? D0 : P(r.inicio), b = P(r.fin) > D1 ? D1 : P(r.fin);
+    const us = UNITS.filter((u) => r.unidades.includes(u));
+    const g = svg.append('g').style('cursor', 'pointer');
+    g.append('text').attr('x', 0).attr('y', y0 + 15).attr('font-size', 12).attr('fill', 'var(--color-fg)').text(r.nudo.length > 34 ? r.nudo.slice(0, 33) + '…' : r.nudo);
+    g.append('rect').attr('x', x(a)).attr('width', Math.max(4, x(b) - x(a))).attr('y', y0 + 4).attr('height', 16).attr('rx', 8).attr('fill', 'var(--cds-chart-status-critical)').attr('fill-opacity', .22).attr('stroke', 'var(--cds-chart-status-critical)').attr('stroke-opacity', .6);
+    us.forEach((u, k) => g.append('circle').attr('cx', x(a) + 10 + k * 13).attr('cy', y0 + 12).attr('r', 5).attr('fill', color(u)));
+    g.append('text').attr('x', 0).attr('y', y0 + 31).attr('font-size', 10).attr('fill', 'var(--color-fg-muted)').text(r.cuando);
+    g.on('mousemove', (ev) => showTip(box, ev, [['', r.nudo + ' · ' + r.cuando], [null, r.unidades], [null, r.tension]])).on('mouseleave', () => hideTip(box));
+  });
+}
+
+/* ---------- hoja de ruta ---------- */
+const EJE_C = (e) => dash.colors[(Number(e) + 3) % dash.colors.length];
+function drawEjes(ejes, comp) {
+  const box = root.querySelector('#tarjetas-ejes');
+  box.replaceChildren();
+  const pe = dash.data('por_eje');
+  ejes.forEach((e) => {
+    const c = document.createElement('div'); c.className = 'slp-card slp-eje'; c.style.borderTop = '4px solid ' + EJE_C(e.eje);
+    const h = document.createElement('h2'); h.textContent = 'Eje ' + e.eje + ' · ' + e.nombre;
+    const p = document.createElement('p'); p.className = 'note'; p.textContent = e.descripcion;
+    const n = document.createElement('div'); n.className = 'slp-lbl';
+    const big = document.createElement('span'); big.className = 'cnt'; big.dataset.source = 'por_eje'; big.dataset.field = 'compromisos'; big.dataset.where = 'eje=' + encodeURIComponent(e.eje);
+    const row = pe.status === 'ok' ? pe.data.find((r) => r.eje === e.eje) : null;
+    big.textContent = row ? String(row.compromisos) : '—';
+    n.append(big, document.createTextNode(' compromisos'));
+    const pr = document.createElement('div'); pr.className = 'slp-prog';
+    const bar = document.createElement('span'); bar.style.background = EJE_C(e.eje);
+    bar.style.width = row && row.compromisos ? (100 * row.cumplidos / row.compromisos) + '%' : '0%';
+    pr.append(bar);
+    const pt = document.createElement('div'); pt.className = 'slp-lbl';
+    const cu = document.createElement('span'); cu.dataset.source = 'por_eje'; cu.dataset.field = 'cumplidos'; cu.dataset.where = 'eje=' + encodeURIComponent(e.eje);
+    cu.textContent = row ? String(row.cumplidos) : '—';
+    const ec = document.createElement('span'); ec.dataset.source = 'por_eje'; ec.dataset.field = 'en_curso'; ec.dataset.where = 'eje=' + encodeURIComponent(e.eje);
+    ec.textContent = row ? String(row.en_curso) : '—';
+    pt.append(cu, document.createTextNode(' cumplidos · '), ec, document.createTextNode(' en curso'));
+    c.append(h, p, n, pr, pt); box.append(c);
+  });
+}
+function drawComp(comp) {
+  const box = root.querySelector('#comp-cards');
+  box.replaceChildren();
+  const today = new Date(), cls = { 'Pendiente': 'pend', 'En curso': 'curso', 'Cumplido': 'ok' };
+  comp.slice().sort((a, b) => a.plazo_fecha < b.plazo_fecha ? -1 : a.plazo_fecha > b.plazo_fecha ? 1 : a.id < b.id ? -1 : 1).forEach((x) => {
+    const c = document.createElement('div'); c.className = 'slp-comp'; c.style.borderLeftColor = EJE_C(x.eje);
+    const top = document.createElement('div'); top.className = 'top';
+    const idt = document.createElement('span'); idt.textContent = x.id + ' · Eje ' + x.eje;
+    const st = document.createElement('span'); st.className = 'slp-st ' + (cls[x.estado] || 'pend'); st.textContent = x.estado;
+    top.append(idt, st);
+    const acc = document.createElement('div'); acc.className = 'acc'; acc.textContent = x.accion;
+    const m1 = document.createElement('div'); m1.className = 'meta'; m1.textContent = x.responsable;
+    const m2 = document.createElement('div'); m2.className = 'meta'; m2.textContent = 'Plazo: ' + x.plazo;
+    c.append(top, acc, m1, m2);
+    if (x.estado !== 'Cumplido') {
+      const d = P(x.plazo_fecha), days = (d - today) / 864e5;
+      if (days < 0 || days <= 30) { const f = document.createElement('div'); f.className = 'slp-flag'; f.textContent = days < 0 ? '● Vencido' : '● Vence en los próximos 30 días'; c.append(f); }
+    }
+    box.append(c);
+  });
+}
+function drawPlazos(comp) {
+  const box = root.querySelector('#plazos');
+  box.querySelectorAll('.slp-ph').forEach((n) => n.remove());
+  const W = Math.max(box.clientWidth, 640), left = 16, right = 16, H = 120, ax = 92;
+  const x = d3.scaleUtc([D0, D1], [left, W - right]);
+  const svg = d3.select(box).selectAll('svg').data([0]).join('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('min-width', '640px');
+  svg.selectAll('*').remove();
+  const months = d3.utcMonth.range(D0, D1);
+  svg.append('line').attr('x1', left).attr('x2', W - right).attr('y1', ax).attr('y2', ax).attr('stroke', 'var(--cds-chart-axis)');
+  svg.append('g').selectAll('text').data(months).join('text').attr('x', (d) => x(d3.utcDay.offset(d, 15))).attr('y', ax + 18).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((d) => MES[d.getUTCMonth()]);
+  svg.append('g').selectAll('line').data(months).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', ax - 4).attr('y2', ax + 4).attr('stroke', 'var(--cds-chart-axis)');
+  const byDate = d3.group(comp, (c) => c.plazo_fecha);
+  byDate.forEach((list, f) => list.forEach((c, k) => {
+    const cx = x(P(f)) - 3, cy = ax - 12 - k * 15;
+    svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 6).attr('fill', EJE_C(c.eje)).style('cursor', 'pointer')
+      .on('mousemove', (ev) => showTip(box, ev, [['', c.id + ' · Eje ' + c.eje + ' · ' + c.plazo], [null, c.accion], [null, c.responsable + ' · ' + c.estado]])).on('mouseleave', () => hideTip(box));
+  }));
+  const now = new Date();
+  if (now > D0 && now < D1) {
+    svg.append('line').attr('x1', x(now)).attr('x2', x(now)).attr('y1', 4).attr('y2', ax + 4).attr('stroke', 'var(--cds-chart-reference)').attr('stroke-width', 1.5);
+    svg.append('text').attr('x', x(now) + 4).attr('y', 12).attr('font-size', 10).attr('fill', 'var(--color-fg-muted)').text('Hoy');
+  }
+}
+
+/* ---------- tablas ---------- */
+function fillRows(tbody, rows, cols) {
+  tbody.replaceChildren();
+  rows.forEach((r) => { const tr = document.createElement('tr'); cols.forEach((k) => { const td = document.createElement('td'); td.textContent = r[k] == null ? '' : String(r[k]); tr.append(td); }); tbody.append(tr); });
+}
+
+function placeholder(sel, d) {
+  const el = root.querySelector(sel);
+  el.replaceChildren();
+  const s = document.createElement('div'); s.className = 'slp-lbl slp-ph'; s.style.cssText = 'display:flex;align-items:center;justify-content:center;min-height:10rem;';
+  s.textContent = d.status === 'error' || d.status === 'connect' ? 'No se pudo cargar' : '';
+  el.append(s);
+}
+
+function draw() {
+  const H = dash.data('hitos'), Pk = dash.data('peaks'), M = dash.data('macroprocesos'), S = dash.data('subprocesos');
+  const CW = dash.data('carga_semanal'), N = dash.data('nudos'), CM = dash.data('carga_mensual'), R = dash.data('resumen');
+  dash.data('por_macro');
+  const DP = dash.data('dependencias'), RD = dash.data('resumen_dep');
+  const HI = dash.data('hitos_individuales'), CI = dash.data('carga_individual'), NS = dash.data('nudos_sistematizacion'), AL = dash.data('alertas'), BR = dash.data('brechas_oficio');
+  const EJ = dash.data('ejes'), CP = dash.data('compromisos'), AC = dash.data('acuerdos');
+  dash.data('por_eje');
+  indBtn.setAttribute('aria-pressed', String(!!dash.params().individuales));
+  const vista = dash.params().vista === 'macro' ? 'macro' : 'unidad';
+  root.querySelectorAll('.slp-vista').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === vista)));
+  root.querySelector('.slp-tl-title').textContent = vista === 'macro' ? 'Línea de tiempo por macroproceso' : 'Línea de tiempo por unidad';
+  root.querySelector('.slp-tl-note').textContent = vista === 'macro'
+    ? 'Cada fila es un macroproceso; el color de cada hito indica la subdirección responsable. Los peaks de carga se ven en la vista por unidad. Pase el cursor o toque para ver el texto completo.'
+    : 'Franjas: peaks de carga marcados bajo la línea. Círculos: hitos (post-it). Barras: hitos con período escrito. Estrellas: dependencias de otra unidad. Pase el cursor o toque para ver el texto completo.';
+  const indRows = HI.status === 'ok' ? HI.data : [], contRows = CI.status === 'ok' ? CI.data : [];
+  [['resumen', R], ['resumen_dep', RD]].forEach(([id, d]) => root.querySelectorAll(`[data-source="${id}"]`).forEach((el) => {
+    if (d.status === 'ok' && d.data[0]) { el.textContent = String(d.data[0][el.dataset.field]); el.classList.remove('dash-skeleton'); }
+    else el.textContent = '—';
+  }));
+  if (pane === 'coordinacion') { if (DP.status === 'ok') drawMatrix(DP.data); else placeholder('#matriz-dep', DP); }
+  {
+    const order = { 'Sí': 0, 'Próximo': 1, 'No': 2, 'Sin franja': 3 };
+    const { unidad } = dash.params();
+    const rows = DP.status === 'ok' ? DP.data.filter((r) => !unidad || r.solicitante === unidad || r.requiere === unidad).slice().sort((a, b) => order[a.en_peak] - order[b.en_peak]) : [];
+    fillRows(root.querySelector('.slp-dep-body'), rows, ['clave', 'fecha', 'solicitante', 'requiere', 'en_peak', 'peak', 'texto']);
+  }
+  const p = dash.params();
+  chips.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(p.unidad === b.dataset.u)));
+  if (M.status === 'ok') {
+    msel.replaceChildren(new Option('Todos', ''), ...M.data.map((m) => new Option(m.codigo + ' · ' + m.nombre, m.codigo)));
+    msel.value = p.macro ?? '';
+  }
+  if (pane === 'calendario') {
+    if (H.status === 'ok' && Pk.status === 'ok') drawTimeline(H.data, Pk.data, indRows, contRows, M.status === 'ok' ? M.data : []); else placeholder('#timeline', H.status !== 'ok' ? H : Pk);
+    if (CW.status === 'ok') drawWeeks(CW.data); else placeholder('#carga', CW);
+  }
+  if (pane === 'meses') { if (H.status === 'ok') drawMonths(H.data, indRows); else placeholder('#grilla-meses', H); }
+  if (pane === 'macroprocesos') {
+    if (M.status === 'ok' && H.status === 'ok') drawMacros(M.data, H.data); else placeholder('#tarjetas-macro', M);
+    if (CM.status === 'ok') drawHeat(CM.data); else placeholder('#heatmap', CM);
+  }
+  fillRows(root.querySelector('.slp-nudos-body'), N.status === 'ok' ? N.data : [], ['periodo', 'semanas', 'max_unidades', 'unidades']);
+  fillRows(root.querySelector('.slp-sub-body'), S.status === 'ok' ? S.data : [], ['subproceso', 'unidad', 'tipo', 'nota']);
+  fillRows(root.querySelector('.slp-ns-body'), NS.status === 'ok' ? NS.data : [], ['nudo', 'cuando', 'unidades', 'tension']);
+  fillRows(root.querySelector('.slp-al-body'), AL.status === 'ok' ? AL.data : [], ['id', 'tipo', 'tema', 'como', 'consecuencia']);
+  fillRows(root.querySelector('.slp-br-body'), BR.status === 'ok' ? BR.data : [], ['id', 'area', 'instruccion', 'plotter', 'brecha']);
+  fillRows(root.querySelector('.slp-ac-body'), AC.status === 'ok' ? AC.data : [], ['id', 'acuerdo']);
+  fillRows(root.querySelector('.slp-ind-body'), indRows.filter(passInd), ['id', 'periodo', 'unidad', 'texto', 'macro', 'condicion', 'nota']);
+  if (pane === 'coordinacion') {
+    if (AL.status === 'ok') drawAlerts(AL.data); else placeholder('#alertas-activas', AL);
+    if (NS.status === 'ok') drawNudos(NS.data); else placeholder('#gantt-nudos', NS);
+  }
+  {
+    const bn = root.querySelector('#alertas-banner'), ul = root.querySelector('.slp-banner-list');
+    const act = AL.status === 'ok' ? AL.data.filter((r) => r.tipo === 'Alerta activa') : [];
+    ul.replaceChildren(...act.map((r) => { const li = document.createElement('li'); li.textContent = r.tema; return li; }));
+    bn.hidden = !act.length || pane === 'detalle';
+  }
+  if (pane === 'hoja') {
+    if (CP.status === 'ok') drawComp(CP.data); else placeholder('#comp-cards', CP);
+    if (EJ.status === 'ok' && CP.status === 'ok') drawEjes(EJ.data, CP.data); else placeholder('#tarjetas-ejes', EJ);
+    if (CP.status === 'ok') drawPlazos(CP.data); else placeholder('#plazos', CP);
+  }
+  {
+    let rows = H.status === 'ok' ? H.data.filter(pass) : [];
+    if (q) rows = rows.filter((r) => Object.values(r).join(' ').toLowerCase().includes(q));
+    rows = rows.slice().sort((a, b) => { const x = a[sortK] || '~', y = b[sortK] || '~'; return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
+    root.querySelectorAll('.slp-htable th button').forEach((b) => b.parentElement.setAttribute('aria-sort', b.dataset.k === sortK ? (sortDir > 0 ? 'ascending' : 'descending') : 'none'));
+    fillRows(root.querySelector('.slp-h-body'), rows, ['id', 'periodo', 'unidad', 'tipo', 'codigo', 'texto', 'macro', 'requiere', 'color_postit', 'nota']);
+  }
+}
+
+dash.onData(draw);
+const named0 = location.hash.slice(1), named = named0 === 'dependencias' || named0 === 'nudos' ? 'coordinacion' : named0;
+if (['calendario', 'meses', 'macroprocesos', 'coordinacion', 'hoja', 'detalle'].includes(named)) showPane(named);
+
+
+draw();
+let __rt; window.addEventListener('resize', () => { clearTimeout(__rt); __rt = setTimeout(draw, 150); });
+
+</script>
+</body>
+</html>
